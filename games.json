@@ -1,0 +1,10 @@
+{
+  "games": [
+    { "id": "cinder-cafe",     "title": "Goon Café",     "genre": "cozy",      "players": "1 player",     "art": "a5", "url": "https://example.com/games/cinder-cafe/" },
+    { "id": "tidepool-racers", "title": "Tidepool Racers", "genre": "racing",    "players": "1–4 players",  "art": "a6", "url": "https://example.com/games/tidepool-racers/" },
+    { "id": "paper-kingdoms",  "title": "Paper Kingdoms",  "genre": "strategy",  "players": "1–2 players",  "art": "a2", "url": "https://example.com/games/paper-kingdoms/" },
+    { "id": "nimbus-run",      "title": "Nimbus Run",      "genre": "adventure", "players": "1 player",     "art": "a3", "url": "https://example.com/games/nimbus-run/" },
+    { "id": "hollow-orchard",  "title": "Hollow Orchard",  "genre": "cozy",      "players": "1–3 players",  "art": "a4", "url": "https://example.com/games/hollow-orchard/" },
+    { "id": "moss-and-lantern","title": "Moss & Lantern",  "genre": "adventure", "players": "1 player",     "art": "a1", "url": "https://example.com/games/moss-and-lantern/" }
+  ]
+}
