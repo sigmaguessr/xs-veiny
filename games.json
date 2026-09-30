@@ -1,6 +1,6 @@
 {
   "games": [
-    { "id": "ages-of-conflict", "title": "Ages of Conflict", "genre": "", "players": "", "art": "", "url": "games/Ages of Conflict.html" },
+    { "id": "ages-of-conflict", "title": "Ages of Conflict", "genre": "goon", "players": "", "art": "", "url": "games/Ages of Conflict.html" },
     { "id": "angry-birds", "title": "Angry Birds", "genre": "", "players": "", "art": "", "url": "games/Angry Birds.html" },
     { "id": "balatro", "title": "Balatro", "genre": "", "players": "", "art": "", "url": "games/Balatro.html" },
     { "id": "baldis-basics-plus", "title": "Baldi's Basics Plus", "genre": "", "players": "", "art": "", "url": "games/Baldi's Basics Plus.html" },
