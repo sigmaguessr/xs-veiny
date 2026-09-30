@@ -1,6 +1,6 @@
 {
   "games": [
-    { "id": "cinder-cafe",     "title": "Goon Café",     "genre": "cozy",      "players": "1 player",     "art": "a5", "url": "https://example.com/games/cinder-cafe/" },
+    { "id": "cinder-cafe",     "title": "Goon Café",     "genre": "cozy",      "players": "1 player",     "art": "a5", "url": "https://raw.githubusercontent.com/Kye1331/kye1331.github.io/refs/heads/main/tboi.html" },
     { "id": "tidepool-racers", "title": "Tidepool Racers", "genre": "racing",    "players": "1–4 players",  "art": "a6", "url": "https://example.com/games/tidepool-racers/" },
     { "id": "paper-kingdoms",  "title": "Paper Kingdoms",  "genre": "strategy",  "players": "1–2 players",  "art": "a2", "url": "https://example.com/games/paper-kingdoms/" },
     { "id": "nimbus-run",      "title": "Nimbus Run",      "genre": "adventure", "players": "1 player",     "art": "a3", "url": "https://example.com/games/nimbus-run/" },
