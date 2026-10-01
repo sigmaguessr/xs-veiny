@@ -5,6 +5,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Envies SX</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22%234f5052%22/%3E%3Ccircle%20cx%3D%228%22%20cy%3D%226%22%20r%3D%2220%22%20fill%3D%22%237b7d80%22%20opacity%3D%22.45%22/%3E%3Ccircle%20cx%3D%2252%22%20cy%3D%2258%22%20r%3D%2222%22%20fill%3D%22%23877a6f%22%20opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M21%2015V49M21%2015H43M21%2032H39M21%2049H43%22%20transform%3D%22rotate%28-4%2032%2032%29%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M48%2011l-4%209M55%2020l-4%209%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.7%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22/%3E%3C/svg%3E">
+<meta name="theme-color" content="#4f5052">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://wsrv.nl">
 <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap" rel="stylesheet">
@@ -198,6 +200,7 @@ h1{letter-spacing:.1em}
 .msg{align-self:flex-start;margin-right:auto;background:rgba(36,36,38,.6);background:color-mix(in srgb,var(--c,#7f8f99) 58%,#1c1c1e)}
 .msg.me{align-self:flex-end;margin-left:auto;margin-right:0;background:#d6c7ae;color:#2a2520;border-color:rgba(255,255,255,.25)}
 .msg.me b{color:rgba(42,37,32,.7)}
+#chatclear{margin-left:auto;text-transform:none}
 </style>
 </head>
 <body>
@@ -320,7 +323,7 @@ h1{letter-spacing:.1em}
   <div class="view" id="view-chat" hidden><section id="chat"><div class="wrap">
     <div class="head"><h2>Chat</h2></div>
     <div class="chatbox glass">
-      <div class="chathead"><input id="chatname" maxlength="20" placeholder="Your name" aria-label="Your name"><span id="chatstatus" class="note">Connecting…</span></div>
+      <div class="chathead"><input id="chatname" maxlength="20" placeholder="Your name" aria-label="Your name"><span id="chatstatus" class="note">Connecting…</span><button id="chatclear" class="chip" type="button">Clear history</button></div>
       <div id="chatpeers" role="group" aria-label="Conversations"></div>
       <div id="log" role="log" aria-live="polite"></div>
       <form id="chatform"><input id="chatin" type="text" maxlength="300" autocomplete="off" placeholder="Message everyone" aria-label="Message"><button type="submit">Send</button></form>
@@ -471,21 +474,52 @@ function loadChat(){   // runs the first time the Chat page is opened
   sc.onerror=()=>{sc.remove();chatStarted=false;document.getElementById('chatstatus').textContent='Could not load the chat library.'};
   document.head.appendChild(sc);
 }
-function startChat(){
+async function startChat(){
   const $=id=>document.getElementById(id);
   const nameIn=$('chatname'),statusEl=$('chatstatus'),peersEl=$('chatpeers'),log=$('log'),form=$('chatform'),input=$('chatin');
   const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
   const clean=(t,n)=>String(t==null?'':t).replace(/\s+/g,' ').trim().slice(0,n);
   const okId=t=>typeof t==='string'&&/^[A-Za-z0-9]{3,24}$/.test(t);
-  // The ID lives in sessionStorage, so every browser tab is its own person (two tabs sharing one ID would see each other's messages as their own).
-  const sess=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v)}catch(e){return null}};
-  let me=sess('sx_id');if(!okId(me)){me='u'+Math.random().toString(36).slice(2,10);sess('sx_id',me)}
+  // Your identity (ID, name, chat history) is saved in this browser's localStorage. If a second tab of this page is open,
+  // it becomes a temporary guest with its own ID, so two tabs never act as the same person or overwrite each other's history.
+  const newId=()=>'u'+(Math.random().toString(36)+'0000000').slice(2,10);
+  async function claimIdentity(){
+    const saved=store('sx_id'),id=okId(saved)?saved:newId();
+    try{
+      if(navigator.locks){
+        const got=await new Promise(res=>navigator.locks.request('sx-chat-'+id,{ifAvailable:true},lock=>{if(!lock){res(false);return}res(true);return new Promise(()=>{})}));  // held until the tab closes
+        if(!got)return{id:newId(),persistent:false};
+      }
+    }catch(e){}
+    store('sx_id',id);return{id,persistent:true};
+  }
+  const ident=await claimIdentity(),me=ident.id,persistent=ident.persistent;
   let name=clean(store('sx_name'),20)||('Guest'+Math.floor(1000+Math.random()*9000));
+  if(!persistent)name=clean(name,16)+' (2)';
   nameIn.value=name;
   const T_PUBLIC=CHAT_NS+'/public',T_PRES=CHAT_NS+'/presence',T_ME=CHAT_NS+'/dm/'+me;
   const COLORS=['#7f8f99','#7e9486','#9a8579','#8f86a3','#a39463','#6f9a98'];  // bubble tints for other people
   const colorOf=id=>COLORS[[...id].reduce((a,ch)=>a+ch.charCodeAt(0),0)%COLORS.length];
   const convos={public:{title:'Public',msgs:[],unread:false}};
+  // Saved chat history: the public room plus direct message threads (last 200 messages each, up to 30 threads).
+  const KEY='sx_chat';
+  function load(){
+    if(!persistent)return;
+    try{
+      const d=JSON.parse(store(KEY)||'null');if(!d||d.v!==1)return;
+      const fix=a=>(Array.isArray(a)?a:[]).slice(-200).map(m=>({from:okId(m&&m.from)?m.from:'',name:clean(m&&m.name,20)||'Guest',text:clean(m&&m.text,300),me:!!(m&&m.me)})).filter(m=>m.text);
+      convos.public.msgs=fix(d.public);
+      Object.entries(d.dms||{}).slice(0,30).forEach(([id,t])=>{if(okId(id)&&t)convos[id]={title:clean(t.title,20)||id,msgs:fix(t.msgs),unread:false}});
+    }catch(e){}
+  }
+  let saveT=0;
+  function write(){
+    if(!persistent)return;
+    const dms={};Object.keys(convos).forEach(k=>{if(k!=='public')dms[k]={title:convos[k].title,msgs:convos[k].msgs}});
+    store(KEY,JSON.stringify({v:1,public:convos.public.msgs,dms}));
+  }
+  const save=()=>{clearTimeout(saveT);saveT=setTimeout(write,300)};
+  load();
   const peers=new Map();   // id -> {name, seen}
   let current='public',client=null,hb=0,bi=0,fails=0,lastSend=0;
   const setStatus=t=>{statusEl.textContent=t};
@@ -523,6 +557,7 @@ function startChat(){
   function addMsg(key,m){
     const c=convos[key];c.msgs.push(m);if(c.msgs.length>200)c.msgs.shift();
     if(key===current)renderLog();else{c.unread=true;renderChips()}
+    save();
   }
   function onMessage(topic,payload){
     let m;try{m=JSON.parse(payload.toString())}catch(e){return}
@@ -539,6 +574,7 @@ function startChat(){
     else if(topic===T_ME&&id!==me){
       peers.set(id,{name:nm,seen:Date.now()});
       if(!convos[id])convos[id]={title:nm,msgs:[],unread:false};
+      convos[id].title=nm;
       addMsg(id,{from:id,name:nm,text,me:false});
     }
   }
@@ -566,7 +602,7 @@ function startChat(){
     });
     c.on('message',onMessage);c.on('error',fail);c.on('close',fail);
   }
-  nameIn.addEventListener('change',()=>{name=clean(nameIn.value,20)||name;nameIn.value=name;store('sx_name',name);announce()});
+  nameIn.addEventListener('change',()=>{name=clean(nameIn.value,20)||name;nameIn.value=name;if(persistent)store('sx_name',name);announce()});
   form.addEventListener('submit',e=>{
     e.preventDefault();
     const text=clean(input.value,300);if(!text)return;
@@ -575,6 +611,16 @@ function startChat(){
     if(current==='public')pub(T_PUBLIC,{id:me,name,text});   // shows up when the broker sends it back
     else{pub(CHAT_NS+'/dm/'+current,{id:me,name,text});addMsg(current,{from:me,name,text,me:true})}
     input.value='';
+  });
+  addEventListener('pagehide',()=>{clearTimeout(saveT);write()});
+  let clearT=0;const clearBtn=$('chatclear');
+  clearBtn.addEventListener('click',()=>{   // two clicks, so it can't happen by accident
+    if(!clearT){clearBtn.textContent='Click again to clear';clearT=setTimeout(()=>{clearT=0;clearBtn.textContent='Clear history'},3000);return}
+    clearTimeout(clearT);clearT=0;clearBtn.textContent='Clear history';
+    Object.keys(convos).forEach(k=>{if(k==='public')convos.public.msgs=[];else delete convos[k]});
+    current='public';input.placeholder='Message everyone';
+    try{localStorage.removeItem(KEY)}catch(e){}
+    renderChips();renderLog();
   });
   renderChips();renderLog();connect();
 }
