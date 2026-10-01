@@ -185,6 +185,9 @@ h1{letter-spacing:.1em}
 .art img.lq{filter:none;transform:none}
 .card{content-visibility:auto;contain-intrinsic-size:auto 340px}
 .card::before{top:2px}
+#chatmount{min-height:60px}
+#chatmount a{color:inherit;text-decoration:underline}
+.chatbox{max-width:900px}
 </style>
 </head>
 <body>
@@ -307,9 +310,8 @@ h1{letter-spacing:.1em}
   <div class="view" id="view-chat" hidden><section id="chat"><div class="wrap">
     <div class="head"><h2>Chat</h2></div>
     <div class="chatbox glass">
-      <div id="log" role="log" aria-live="polite"></div>
-      <form id="chatform"><input id="chatin" type="text" maxlength="200" required placeholder="Say something" aria-label="Message"><button type="submit">Send</button></form>
-      <p class="note">Messages show only on this device for now.</p>
+      <div id="chatmount"></div>
+      <p class="note">Public chat for everyone on Envies SX. You can also send direct messages to people in the room.</p>
     </div>
   </div></section>
 
@@ -440,14 +442,36 @@ const url = game.url;
 }
 grid.addEventListener('click',e=>{const b=e.target.closest('.price');if(!b)return;const game=byId.get(b.dataset.id);if(game)openGame(game)});
 document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();e.target.reset();say('Subscribed. Watch your inbox.')});
-const log=document.getElementById('log');
-function addMsg(name,text,me){const d=document.createElement('div');d.className='msg'+(me?' me':'');const b=document.createElement('b');b.textContent=name;d.append(b,text);log.append(d);log.scrollTop=log.scrollHeight}
-addMsg('Mika','Anyone tried Hollow Orchard yet?');addMsg('Jun','Yes, the rainy level is my favorite.');
-document.getElementById('chatform').addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('chatin');const t=i.value.trim();if(t){addMsg('You',t,true);i.value=''}});
+// Chat: Chitchatter's <chat-room> embed (https://github.com/jeremyckahn/chitchatter).
+// It is one public room, and Chitchatter has direct messages between people in a room built in.
+// The chat script is only downloaded the first time the Chat page is opened.
+const CHAT_ROOM='envies-sx';   // everyone who uses this same room name is in the same public chat
+const CHAT_SDK='https://chitchatter.im/sdk.js';
+let chatStarted=false;
+function loadChat(){
+  if(chatStarted)return;
+  chatStarted=true;
+  const mount=document.getElementById('chatmount');
+  mount.textContent='Loading chat…';
+  const sc=document.createElement('script');
+  sc.src=CHAT_SDK;
+  sc.onload=()=>{
+    const el=document.createElement('chat-room');
+    el.setAttribute('room',CHAT_ROOM);
+    el.setAttribute('color-mode','dark');
+    el.setAttribute('style','display:block;width:100%;height:min(75vh,640px);min-height:420px;border:0;border-radius:20px');
+    mount.textContent='';mount.appendChild(el);
+  };
+  sc.onerror=()=>{
+    sc.remove();chatStarted=false;
+    mount.innerHTML='Chat could not load. <a href="https://chitchatter.im/public/'+encodeURIComponent(CHAT_ROOM)+'" target="_blank" rel="noopener">Open it in a new tab</a>.';
+  };
+  document.head.appendChild(sc);
+}
 const viewNames=['games','shows','chat','example'];
 function show(v){viewNames.forEach(x=>document.getElementById('view-'+x).hidden=x!==v);
   document.querySelectorAll('.side .nav').forEach(b=>b.dataset.view===v?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
-  window.scrollTo(0,0);log.scrollTop=log.scrollHeight}
+  window.scrollTo(0,0);if(v==='chat')loadChat()}
 document.querySelectorAll('.side .nav').forEach(b=>b.addEventListener('click',()=>show(b.dataset.view)));
 document.querySelectorAll('.hubtile').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.view)show(b.dataset.view);else document.getElementById(b.dataset.to).scrollIntoView({behavior:'smooth'})}));
 show('games');
