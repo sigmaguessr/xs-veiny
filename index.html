@@ -185,11 +185,9 @@ h1{letter-spacing:.1em}
 .art img.lq{filter:none;transform:none}
 .card{content-visibility:auto;contain-intrinsic-size:auto 340px}
 .card::before{top:2px}
-.rainfx{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
 </style>
 </head>
 <body>
-<canvas class="rainfx" id="rain" aria-hidden="true"></canvas>
 <div class="blobs" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
 
 <aside class="side" aria-label="Main">
@@ -432,6 +430,7 @@ const url = game.url;
           newWindow.document.open();
           newWindow.document.write(doc.documentElement.outerHTML);
           newWindow.document.close();
+          // startRain(newWindow);  // <- rain in the game window: ready to use, not switched on
       } else {
           console.error("Popup blocked! Please allow popups for this site.");
       }
@@ -454,14 +453,22 @@ document.querySelectorAll('.hubtile').forEach(b=>b.addEventListener('click',()=>
 show('games');
 
 // Rain: random drops with different sizes, speeds and brightness, pushed by a slowly shifting wind.
-(function(){
-  const cv=document.getElementById('rain');
-  if(!cv)return;
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){cv.remove();return}
+// Works in any window, not just this page:
+//   startRain()                  -> rain on this page
+//   const stop = startRain(win)  -> rain in another same-origin window (e.g. the one openGame opens)
+// It creates its own canvas inside win.document and uses win's own timers (requestAnimationFrame),
+// so it keeps running when that window is in front and this page is in the background.
+// Call stop() to remove it.
+function startRain(win=window,z=2147483647){
+  const doc=win.document;
+  if(win.matchMedia('(prefers-reduced-motion: reduce)').matches)return ()=>{};
+  const cv=doc.createElement('canvas');
+  cv.setAttribute('aria-hidden','true');
+  cv.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:'+z;
   const ctx=cv.getContext('2d');
   const SCALE=.5;  // drawn at half size and stretched up, which also softens the drops
   const LAYERS=[{a:.10,w:.8},{a:.16,w:1},{a:.24,w:1.3},{a:.34,w:1.7}];  // far to near: opacity, thickness
-  let W=0,H=0,drops=[],last=performance.now(),t=0;
+  let W=0,H=0,drops=[],last=win.performance.now(),t=0,running=true,raf=0;
   const rnd=(a,b)=>a+Math.random()*(b-a);
   function spawn(d,anywhere){
     const l=Math.floor(Math.random()*4),k=l/3;
@@ -469,12 +476,13 @@ show('games');
     d.x=rnd(-H*.4,W);d.y=anywhere?rnd(0,H):rnd(-H*.3,0);
   }
   function size(){
-    W=Math.floor(innerWidth*SCALE);H=Math.floor(innerHeight*SCALE);cv.width=W;cv.height=H;
-    const n=Math.max(40,Math.min(170,Math.round(innerWidth*innerHeight/12000)));
+    W=Math.floor(win.innerWidth*SCALE);H=Math.floor(win.innerHeight*SCALE);cv.width=W;cv.height=H;
+    const n=Math.max(40,Math.min(170,Math.round(win.innerWidth*win.innerHeight/12000)));
     while(drops.length<n){const d={};spawn(d,true);drops.push(d)}
     drops.length=n;
   }
   function frame(now){
+    if(!running||win.closed)return;
     const dt=Math.min((now-last)/1000||0,.05);last=now;t+=dt;
     const wind=.16+.07*Math.sin(t*.35)+.03*Math.sin(t*1.1);
     ctx.clearRect(0,0,W,H);ctx.lineCap='round';ctx.strokeStyle='#fff';
@@ -489,10 +497,17 @@ show('games');
       }
       ctx.stroke();
     }
-    requestAnimationFrame(frame);
+    raf=win.requestAnimationFrame(frame);
   }
-  size();addEventListener('resize',size);requestAnimationFrame(frame);
-})();
+  function start(){
+    if(!running)return;
+    doc.documentElement.appendChild(cv);  // on <html>, so it survives the page replacing its <body>
+    size();win.addEventListener('resize',size);raf=win.requestAnimationFrame(frame);
+  }
+  if(doc.documentElement)start();else doc.addEventListener('DOMContentLoaded',start,{once:true});
+  return function stop(){running=false;win.cancelAnimationFrame(raf);win.removeEventListener('resize',size);cv.remove()};
+}
+startRain(window,30);  // this page
 </script>
 </body>
 </html>
