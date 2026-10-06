@@ -216,6 +216,35 @@ h1{letter-spacing:.1em}
 .fav[aria-pressed="true"]{color:#f2a7a0;background:rgba(28,28,30,.72)}
 .price:disabled{opacity:.6;cursor:wait}
 #totop{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:25;width:44px;height:44px;padding:0;border-radius:50%;font-size:1.3rem;line-height:1;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#chatform{flex-wrap:wrap;align-items:center}
+#chatinv{display:grid;gap:8px;margin-bottom:10px}
+.inv{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px;border-radius:var(--wob-s);border:1px dashed var(--edge);background:var(--glass)}
+.inv span{flex:1 1 160px}
+#convohead{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+#convohead strong{margin-right:auto}
+.tool{background:transparent;border:1px solid var(--edge);padding:6px 12px;border-radius:var(--wob-s)}
+.tool:hover{background:rgba(255,255,255,.12)}
+.panel{display:grid;gap:10px;padding:14px;margin-bottom:10px;border-radius:var(--wob-l);background:rgba(34,34,36,.7);border:2px solid var(--edge)}
+#gpname,#gpsearch{padding:8px 14px;border-radius:var(--wob-s);border:1px solid var(--edge);background:rgba(0,0,0,.25);color:var(--ink);font:inherit;-webkit-appearance:none;appearance:none}
+#gpsearch{width:100%;margin-bottom:8px}
+#gplist{display:flex;gap:8px;flex-wrap:wrap}
+#gplist label{display:flex;gap:6px;align-items:center;padding:4px 10px;border:1px dashed var(--edge);border-radius:var(--wob-s);cursor:pointer}
+.panel .row{display:flex;gap:8px}
+#chatbar{position:relative}
+.pop{position:absolute;left:0;right:0;bottom:calc(100% + 8px);z-index:5;padding:12px;border-radius:var(--wob-l);background:rgba(32,32,34,.97);border:2px solid var(--edge);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.emtabs{display:flex;gap:6px;margin-bottom:8px}
+.emtabs button,.em{background:transparent;border:1px solid transparent;padding:4px 8px;font-size:1.3rem;line-height:1.2;border-radius:10px}
+.emtabs button[aria-pressed="true"]{background:rgba(255,255,255,.18)}
+.emgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:2px;max-height:190px;overflow-y:auto}
+.em:hover{background:rgba(255,255,255,.15)}
+#gpresults{display:grid;gap:6px;max-height:210px;overflow-y:auto}
+.gpick{display:flex;justify-content:space-between;gap:10px;text-align:left;background:rgba(255,255,255,.08);border:1px solid var(--edge);padding:8px 12px;border-radius:var(--wob-s)}
+.gpick:hover{background:rgba(255,255,255,.18)}
+.gpick small{color:var(--muted)}
+.gcard{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:6px;padding:8px 10px;border-radius:var(--wob-s);background:rgba(0,0,0,.25)}
+.msg.me .gcard{background:rgba(0,0,0,.1)}
+.gplay{padding:4px 14px;font-size:.95rem}
+@media(max-width:820px){#chatform input{order:-1;flex:1 1 100%}#chatform [type=submit]{margin-left:auto}}
 </style>
 </head>
 <body>
@@ -346,9 +375,25 @@ h1{letter-spacing:.1em}
     <div class="chatbox glass">
       <div class="chathead"><input id="chatname" maxlength="20" placeholder="Your name" aria-label="Your name"><span id="chatstatus" class="note">Connecting…</span><button id="chatclear" class="chip" type="button">Clear history</button></div>
       <div id="chatpeers" role="group" aria-label="Conversations"></div>
+      <div id="chatinv" hidden></div>
+      <div id="convohead" hidden><strong id="chtitle"></strong><button type="button" class="tool" id="chadd">Add people</button><button type="button" class="tool" id="chleave">Leave group</button></div>
+      <div id="grouppanel" class="panel" hidden>
+        <strong id="gptitle">New group</strong>
+        <input id="gpname" maxlength="24" placeholder="Group name" aria-label="Group name">
+        <div id="gplist"></div>
+        <div class="row"><button type="button" id="gpgo">Create group</button><button type="button" class="tool" id="gpcancel">Cancel</button></div>
+      </div>
       <div id="log" role="log" aria-live="polite"></div>
-      <form id="chatform"><input id="chatin" type="text" maxlength="300" autocomplete="off" placeholder="Message everyone" aria-label="Message"><button type="submit">Send</button></form>
-      <p class="note">Open to everyone, so don't share personal info. Tap a name above to send a direct message. Messages aren't saved.</p>
+      <div id="chatbar">
+        <div id="emojipanel" class="pop" hidden></div>
+        <div id="gamepanel" class="pop" hidden><input id="gpsearch" type="search" placeholder="Search games to send" aria-label="Search games to send" autocomplete="off"><div id="gpresults"></div></div>
+        <form id="chatform">
+          <button type="button" class="tool" id="emojibtn" aria-label="Emoji">🙂</button>
+          <button type="button" class="tool" id="gamebtn">Send game</button>
+          <input id="chatin" type="text" maxlength="300" autocomplete="off" placeholder="Message everyone" aria-label="Message"><button type="submit">Send</button>
+        </form>
+      </div>
+      <p class="note">Open to everyone, so don't share personal info. Tap a name above to send a direct message, or start a group with "+ New group".</p>
     </div>
   </div></section>
 
@@ -482,6 +527,13 @@ async function fetchAndOpenHtml(url) {
     say('Could not open that game. Please try again.');
   }
 }
+async function playGame(btn,id){   // used by the Play buttons in the grid and in shared-game chat messages
+  const game=byId.get(id);
+  if(!game){say("That game isn't in your library.");return}
+  recent=[id,...recent.filter(x=>x!==id)].slice(0,12);ls.set('sx_recent',recent);
+  const label=btn.textContent;btn.disabled=true;btn.textContent='Loading…';   // show progress while the game downloads
+  try{await openGame(game)}finally{btn.disabled=false;btn.textContent=label}
+}
 grid.addEventListener('click',async e=>{
   const fb=e.target.closest('.fav');
   if(fb){   // heart: add or remove a favorite
@@ -494,10 +546,7 @@ grid.addEventListener('click',async e=>{
     return;
   }
   const b=e.target.closest('.price');if(!b)return;
-  const game=byId.get(b.dataset.id);if(!game)return;
-  recent=[b.dataset.id,...recent.filter(x=>x!==b.dataset.id)].slice(0,12);ls.set('sx_recent',recent);
-  const label=b.textContent;b.disabled=true;b.textContent='Loading…';   // show progress while the game downloads
-  try{await openGame(game)}finally{b.disabled=false;b.textContent=label}
+  playGame(b,b.dataset.id);
 });
 let searchT=0;
 searchEl.addEventListener('input',()=>{clearTimeout(searchT);searchT=setTimeout(runSearch,150)});
@@ -518,7 +567,9 @@ document.getElementById('form').addEventListener('submit',e=>{e.preventDefault()
 // Anyone can read the public room, and public test brokers carry no uptime guarantee. If you ever get your own
 // MQTT broker (or a paid one), put its wss:// address first in CHAT_BROKERS.
 const CHAT_NS='envies-sx/v1';   // topic prefix that keeps this site's chat separate from everyone else on the broker
-const CHAT_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];  // tried in turn
+// Tried in turn. The first one uses port 443 (the normal HTTPS port), which public Wi-Fi almost always allows.
+// The other two use unusual ports (8084, 8884) that many school, work and public networks block.
+const CHAT_BROKERS=['wss://mqtt.eclipseprojects.io:443/mqtt','wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
 const MQTT_JS='https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js';
 let chatStarted=false;
 function loadChat(){   // runs the first time the Chat page is opened
@@ -532,13 +583,16 @@ function loadChat(){   // runs the first time the Chat page is opened
 }
 async function startChat(){
   const $=id=>document.getElementById(id);
-  const nameIn=$('chatname'),statusEl=$('chatstatus'),peersEl=$('chatpeers'),log=$('log'),form=$('chatform'),input=$('chatin');
+  const nameIn=$('chatname'),statusEl=$('chatstatus'),peersEl=$('chatpeers'),log=$('log'),form=$('chatform'),input=$('chatin'),invEl=$('chatinv'),headEl=$('convohead');
+  const gp=$('grouppanel'),gpName=$('gpname'),gpList=$('gplist'),emojiPanel=$('emojipanel'),gamePanel=$('gamepanel'),gSearch=$('gpsearch'),gResults=$('gpresults');
   const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
-  const clean=(t,n)=>String(t==null?'':t).replace(/\s+/g,' ').trim().slice(0,n);
+  const clean=(t,n)=>Array.from(String(t==null?'':t).replace(/\s+/g,' ').trim()).slice(0,n).join('');
   const okId=t=>typeof t==='string'&&/^[A-Za-z0-9]{3,24}$/.test(t);
+  const GAME_ID=/^[\w-]{1,40}$/;
+  const rid=n=>(Math.random().toString(36)+Math.random().toString(36)).replace(/[^a-z0-9]/g,'').padEnd(n,'0').slice(0,n);
   // Your identity (ID, name, chat history) is saved in this browser's localStorage. If a second tab of this page is open,
   // it becomes a temporary guest with its own ID, so two tabs never act as the same person or overwrite each other's history.
-  const newId=()=>'u'+(Math.random().toString(36)+'0000000').slice(2,10);
+  const newId=()=>'u'+rid(8);
   async function claimIdentity(){
     const saved=store('sx_id'),id=okId(saved)?saved:newId();
     try{
@@ -553,36 +607,55 @@ async function startChat(){
   let name=clean(store('sx_name'),20)||('Guest'+Math.floor(1000+Math.random()*9000));
   if(!persistent)name=clean(name,16)+' (2)';
   nameIn.value=name;
+  const GP=CHAT_NS+'/group/';
   const T_PUBLIC=CHAT_NS+'/public',T_PRES=CHAT_NS+'/presence',T_ME=CHAT_NS+'/dm/'+me;
   const COLORS=['#7f8f99','#7e9486','#9a8579','#8f86a3','#a39463','#6f9a98'];  // bubble tints for other people
   const colorOf=id=>COLORS[[...id].reduce((a,ch)=>a+ch.charCodeAt(0),0)%COLORS.length];
+  // Conversation keys: "public", "g_<groupId>" for a group, or the other person's ID for a direct message.
+  const kindOf=k=>k==='public'?'public':k.startsWith('g_')?'group':'dm';
   const convos={public:{title:'Public',msgs:[],unread:false}};
-  // Saved chat history: the public room plus direct message threads (last 200 messages each, up to 30 threads).
+  const topicFor=k=>k==='public'?T_PUBLIC:kindOf(k)==='group'?GP+convos[k].gid:CHAT_NS+'/dm/'+k;
+  const groupKeys=()=>Object.keys(convos).filter(k=>kindOf(k)==='group');
+  // Saved chat history: public room, direct message threads and groups (last 200 messages each).
   const KEY='sx_chat';
   function load(){
     if(!persistent)return;
     try{
-      const d=JSON.parse(store(KEY)||'null');if(!d||d.v!==1)return;
-      const fix=a=>(Array.isArray(a)?a:[]).slice(-200).map(m=>({from:okId(m&&m.from)?m.from:'',name:clean(m&&m.name,20)||'Guest',text:clean(m&&m.text,300),me:!!(m&&m.me)})).filter(m=>m.text);
+      const d=JSON.parse(store(KEY)||'null');if(!d||(d.v!==1&&d.v!==2))return;
+      const fix=a=>(Array.isArray(a)?a:[]).slice(-200).map(m=>{
+        m=m||{};const isGame=m.type==='game'&&GAME_ID.test(String(m.gid||''));
+        return{from:okId(m.from)?m.from:'',name:clean(m.name,20)||'Guest',text:clean(m.text,300),me:!!m.me,type:isGame?'game':undefined,gid:isGame?String(m.gid):undefined};
+      }).filter(m=>m.text);
       convos.public.msgs=fix(d.public);
       Object.entries(d.dms||{}).slice(0,30).forEach(([id,t])=>{if(okId(id)&&t)convos[id]={title:clean(t.title,20)||id,msgs:fix(t.msgs),unread:false}});
+      Object.entries(d.groups||{}).slice(0,12).forEach(([gid,t])=>{if(okId(gid)&&t)convos['g_'+gid]={gid,title:clean(t.title,24)||'Group',msgs:fix(t.msgs),unread:false}});
     }catch(e){}
   }
   let saveT=0;
   function write(){
     if(!persistent)return;
-    const dms={};Object.keys(convos).forEach(k=>{if(k!=='public')dms[k]={title:convos[k].title,msgs:convos[k].msgs}});
-    store(KEY,JSON.stringify({v:1,public:convos.public.msgs,dms}));
+    const dms={},groups={};
+    Object.keys(convos).forEach(k=>{const c=convos[k],kd=kindOf(k);
+      if(kd==='dm')dms[k]={title:c.title,msgs:c.msgs};else if(kd==='group')groups[c.gid]={title:c.title,msgs:c.msgs}});
+    store(KEY,JSON.stringify({v:2,public:convos.public.msgs,dms,groups}));
   }
   const save=()=>{clearTimeout(saveT);saveT=setTimeout(write,300)};
   load();
   const peers=new Map();   // id -> {name, seen}
+  const invites=new Map(); // groupId -> {gid, gname, from}
   let current='public',client=null,hb=0,bi=0,fails=0,lastSend=0;
   const setStatus=t=>{statusEl.textContent=t};
   const pub=(t,o)=>{if(client&&client.connected)client.publish(t,JSON.stringify(o),{qos:0})};
   const announce=()=>pub(T_PRES,{id:me,name});
   let replyTimer=0;   // when someone new shows up, tell them we're here too (once, after a short random delay)
   const replySoon=()=>{if(replyTimer)return;replyTimer=setTimeout(()=>{replyTimer=0;announce()},200+Math.random()*800)};
+  function twoClick(btn,idle,armed,fn){   // a button that needs two clicks, so it can't happen by accident
+    let t=0;
+    btn.addEventListener('click',()=>{
+      if(!t){btn.textContent=armed;t=setTimeout(()=>{t=0;btn.textContent=idle},3000);return}
+      clearTimeout(t);t=0;btn.textContent=idle;fn();
+    });
+  }
   function renderChips(){
     peersEl.textContent='';
     const add=(key,label)=>{
@@ -592,28 +665,98 @@ async function startChat(){
       b.addEventListener('click',()=>openConvo(key));peersEl.appendChild(b);
     };
     add('public','Public');
-    const ids=[...new Set([...peers.keys(),...Object.keys(convos).filter(k=>k!=='public')])].slice(0,40);
+    groupKeys().forEach(k=>add(k,'# '+convos[k].title));
+    const ids=[...new Set([...peers.keys(),...Object.keys(convos).filter(k=>kindOf(k)==='dm')])].slice(0,40);
     ids.forEach(id=>{const p=peers.get(id);add(id,p?p.name:convos[id].title+' (offline)')});
+    const g=document.createElement('button');g.type='button';g.className='chip';g.id='chatnewgroup';g.textContent='+ New group';
+    g.addEventListener('click',()=>openGroupPanel(null));peersEl.appendChild(g);
   }
   function renderLog(){
     log.textContent='';
     convos[current].msgs.forEach(m=>{
       const d=document.createElement('div');d.className='msg'+(m.me?' me':'');if(!m.me)d.style.setProperty('--c',colorOf(m.from||m.name));
       const b=document.createElement('b');b.textContent=m.name;
-      d.append(b,m.text);log.append(d);
+      if(m.type==='game'){   // a shared game: name plus a Play button that opens it from your own library
+        const g=byId.get(m.gid),card=document.createElement('div'),t=document.createElement('span'),btn=document.createElement('button');
+        card.className='gcard';t.textContent='🎮 '+(g?g.name:m.text);
+        btn.type='button';btn.className='gplay';btn.dataset.gid=m.gid;btn.textContent='Play';
+        card.append(t,btn);d.append(b,'shared a game',card);
+      }else d.append(b,m.text);
+      log.append(d);
     });
     log.scrollTop=log.scrollHeight;
   }
   function openConvo(key){
     if(!convos[key]){const p=peers.get(key);convos[key]={title:p?p.name:key,msgs:[],unread:false}}
     current=key;convos[key].unread=false;
-    input.placeholder=key==='public'?'Message everyone':'Message '+convos[key].title;
+    const kd=kindOf(key);
+    input.placeholder=kd==='public'?'Message everyone':'Message '+convos[key].title;
+    headEl.hidden=kd!=='group';
+    if(kd==='group')$('chtitle').textContent='# '+convos[key].title;
+    gp.hidden=true;
     renderChips();renderLog();
   }
   function addMsg(key,m){
     const c=convos[key];c.msgs.push(m);if(c.msgs.length>200)c.msgs.shift();
     if(key===current)renderLog();else{c.unread=true;renderChips()}
     save();
+  }
+  // ----- groups -----
+  function joinGroup(gid,gname){
+    const key='g_'+gid;
+    if(!convos[key]){
+      if(groupKeys().length>=12){say('You are in too many groups. Leave one first.');return null}
+      convos[key]={gid,title:clean(gname,24)||'Group',msgs:[],unread:false};
+      if(client&&client.connected)client.subscribe(topicFor(key));
+      save();
+    }
+    return key;
+  }
+  function leaveGroup(key){
+    if(client&&client.connected)client.unsubscribe(topicFor(key));
+    delete convos[key];save();openConvo('public');
+  }
+  function invite(ids,gid,gname){ids.forEach(pid=>pub(CHAT_NS+'/dm/'+pid,{id:me,name,t:'invite',gid,gname}))}
+  function renderInvites(){
+    invEl.textContent='';invEl.hidden=!invites.size;
+    invites.forEach(v=>{
+      const row=document.createElement('div');row.className='inv';
+      const sp=document.createElement('span');sp.textContent=v.from+' invited you to "'+v.gname+'"';
+      const yes=document.createElement('button');yes.type='button';yes.textContent='Join';
+      yes.addEventListener('click',()=>{invites.delete(v.gid);renderInvites();const k=joinGroup(v.gid,v.gname);if(k)openConvo(k)});
+      const no=document.createElement('button');no.type='button';no.className='tool';no.textContent='Ignore';
+      no.addEventListener('click',()=>{invites.delete(v.gid);renderInvites()});
+      row.append(sp,yes,no);invEl.append(row);
+    });
+  }
+  let gpTarget=null;   // null = making a new group, otherwise the key of the group to add people to
+  function openGroupPanel(key){
+    gpTarget=key;
+    $('gptitle').textContent=key?'Add people to "'+convos[key].title+'"':'New group';
+    gpName.hidden=!!key;gpName.value='';
+    $('gpgo').textContent=key?'Send invites':'Create group';
+    gpList.textContent='';
+    if(!peers.size){const p=document.createElement('span');p.className='note';p.textContent='Nobody else is online right now. You can still create the group and invite people later.';gpList.append(p)}
+    peers.forEach((p,id)=>{
+      const lab=document.createElement('label'),cb=document.createElement('input'),sp=document.createElement('span');
+      cb.type='checkbox';cb.value=id;sp.textContent=p.name;lab.append(cb,sp);gpList.append(lab);
+    });
+    gp.hidden=false;if(!key)gpName.focus();
+  }
+  $('gpcancel').addEventListener('click',()=>{gp.hidden=true});
+  $('gpgo').addEventListener('click',()=>{
+    const ids=[...gpList.querySelectorAll('input:checked')].map(i=>i.value);
+    if(gpTarget){invite(ids,convos[gpTarget].gid,convos[gpTarget].title);gp.hidden=true;if(ids.length)say('Invites sent');return}
+    const gname=clean(gpName.value,24)||'Group chat',gid=rid(10),key=joinGroup(gid,gname);
+    if(!key)return;
+    invite(ids,gid,gname);openConvo(key);
+  });
+  $('chadd').addEventListener('click',()=>openGroupPanel(current));
+  twoClick($('chleave'),'Leave group','Click again to leave',()=>leaveGroup(current));
+  // ----- incoming messages -----
+  function readMsg(m){
+    if(m.t==='game'){const gid=String(m.gid||'');if(!GAME_ID.test(gid))return null;return{type:'game',gid,text:clean(m.gname,60)||'a game'}}
+    const text=clean(m.text,300);return text?{text}:null;
   }
   function onMessage(topic,payload){
     let m;try{m=JSON.parse(payload.toString())}catch(e){return}
@@ -625,13 +768,23 @@ async function startChat(){
       else{const isNew=!peers.has(id);peers.set(id,{name:nm,seen:Date.now()});if(isNew)replySoon()}
       renderChips();return;
     }
-    const text=clean(m.text,300);if(!text)return;
-    if(topic===T_PUBLIC)addMsg('public',{from:id,name:nm,text,me:id===me});
-    else if(topic===T_ME&&id!==me){
+    if(topic===T_PUBLIC){const r=readMsg(m);if(r)addMsg('public',{from:id,name:nm,me:id===me,...r});return}
+    if(topic===T_ME){
+      if(id===me)return;
+      if(m.t==='invite'){
+        const gid=String(m.gid||'');
+        if(!okId(gid)||convos['g_'+gid]||invites.size>=5)return;
+        invites.set(gid,{gid,gname:clean(m.gname,24)||'Group',from:nm});renderInvites();say(nm+' invited you to a group');return;
+      }
+      const r=readMsg(m);if(!r)return;
       peers.set(id,{name:nm,seen:Date.now()});
       if(!convos[id])convos[id]={title:nm,msgs:[],unread:false};
       convos[id].title=nm;
-      addMsg(id,{from:id,name:nm,text,me:false});
+      addMsg(id,{from:id,name:nm,me:false,...r});return;
+    }
+    if(topic.startsWith(GP)){
+      const key='g_'+topic.slice(GP.length);if(!convos[key])return;
+      const r=readMsg(m);if(r)addMsg(key,{from:id,name:nm,me:id===me,...r});
     }
   }
   function connect(){
@@ -641,15 +794,15 @@ async function startChat(){
       will:{topic:T_PRES,payload:JSON.stringify({id:me,name,leave:true}),qos:0}
     });
     client=c;let dead=false;
-    setStatus('Connecting…');
+    setStatus('Connecting… (server '+(bi%CHAT_BROKERS.length+1)+' of '+CHAT_BROKERS.length+')');
     const fail=()=>{
       if(dead)return;dead=true;clearInterval(hb);try{c.end(true)}catch(e){}
-      if(++fails>6){setStatus('Could not reach the chat servers. Reload the page to try again.');return}
+      if(++fails>CHAT_BROKERS.length*3){setStatus('Could not reach any chat server. Your network may be blocking chat. Reload to try again.');return}
       setStatus('Disconnected. Retrying…');bi++;setTimeout(connect,2500);
     };
     c.on('connect',()=>{
       fails=0;setStatus('Connected');
-      c.subscribe([T_PUBLIC,T_PRES,T_ME]);announce();
+      c.subscribe([T_PUBLIC,T_PRES,T_ME,...groupKeys().map(topicFor)]);announce();
       hb=setInterval(()=>{   // say we're still here, and forget people who went quiet
         announce();let changed=false;
         peers.forEach((p,id)=>{if(Date.now()-p.seen>70000){peers.delete(id);changed=true}});
@@ -658,27 +811,80 @@ async function startChat(){
     });
     c.on('message',onMessage);c.on('error',fail);c.on('close',fail);
   }
+  // ----- sending -----
+  function send(payload){   // payload: {text} or {t:'game',gid,gname}
+    if(!client||!client.connected){setStatus('Not connected yet');return false}
+    if(Date.now()-lastSend<800)return false;lastSend=Date.now();
+    pub(topicFor(current),{id:me,name,...payload});
+    if(kindOf(current)==='dm'){   // public and group messages show up when the broker sends them back; direct messages are added here
+      const local=payload.t==='game'?{type:'game',gid:payload.gid,text:payload.gname}:{text:payload.text};
+      addMsg(current,{from:me,name,me:true,...local});
+    }
+    return true;
+  }
+  form.addEventListener('submit',e=>{e.preventDefault();const text=clean(input.value,300);if(!text)return;if(send({text}))input.value=''});
   nameIn.addEventListener('change',()=>{name=clean(nameIn.value,20)||name;nameIn.value=name;if(persistent)store('sx_name',name);announce()});
-  form.addEventListener('submit',e=>{
-    e.preventDefault();
-    const text=clean(input.value,300);if(!text)return;
-    if(!client||!client.connected){setStatus('Not connected yet');return}
-    if(Date.now()-lastSend<800)return;lastSend=Date.now();
-    if(current==='public')pub(T_PUBLIC,{id:me,name,text});   // shows up when the broker sends it back
-    else{pub(CHAT_NS+'/dm/'+current,{id:me,name,text});addMsg(current,{from:me,name,text,me:true})}
-    input.value='';
-  });
+  // ----- emoji picker -----
+  const EMOJI=[
+    ['😀',['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','😉','😍','🥰','😘','😋','😎','🤩','🥳','😏','😴','🤔','🙄','😬','😭','😢','😡','🥺','😱','🤯']],
+    ['👍',['👍','👎','👏','🙌','🙏','👋','🤝','✌️','🤞','🤟','👌','💪','👀','🫡','🤷','🤦','🙈','🙉','🙊']],
+    ['❤️',['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💖','💕','💔','✨','⭐','🔥','💯','🎉','🎊','🎁']],
+    ['🎮',['🎮','🕹️','👾','🏆','🥇','🎯','🎲','🧩','🚀','⚽','🏀','🎧','🎵','🍕','🍔','🍿','☕','🧋']],
+    ['🌧️',['🌧️','☔','⛈️','🌈','☀️','🌙','🌸','🌿','🐱','🐶','🦊','🐼','🐸','🦄','🐢','🦋']]
+  ];
+  let emojiBuilt=false;
+  function buildEmoji(){
+    emojiBuilt=true;
+    const tabs=document.createElement('div');tabs.className='emtabs';
+    const grid=document.createElement('div');grid.className='emgrid';
+    const show=i=>{
+      tabs.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-pressed',j===i));
+      grid.textContent='';
+      EMOJI[i][1].forEach(em=>{const b=document.createElement('button');b.type='button';b.className='em';b.textContent=em;b.addEventListener('click',()=>insertEmoji(em));grid.append(b)});
+    };
+    EMOJI.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.textContent=c[0];b.setAttribute('aria-label','Emoji group '+(i+1));b.addEventListener('click',()=>show(i));tabs.append(b)});
+    emojiPanel.append(tabs,grid);show(0);
+  }
+  function insertEmoji(em){
+    const s=input.selectionStart==null?input.value.length:input.selectionStart,e=input.selectionEnd==null?s:input.selectionEnd;
+    input.value=input.value.slice(0,s)+em+input.value.slice(e);
+    input.focus();const p=s+em.length;try{input.setSelectionRange(p,p)}catch(x){}
+  }
+  // ----- send a game -----
+  function fillGamePicker(){
+    const t=gSearch.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let list=[];
+    if(!t.length){   // nothing typed: your favorites and recently played games first
+      const seen=new Set();
+      [...favs,...recent].forEach(id=>{const g=byId.get(id);if(g&&!seen.has(id)){seen.add(id);list.push(g)}});
+      if(!list.length)list=games.slice(0,8);
+    }else list=games.filter(g=>t.every(x=>g._s.includes(x)));
+    list=list.filter(g=>GAME_ID.test(String(g.id))).slice(0,8);
+    gResults.textContent='';
+    if(!list.length){const p=document.createElement('span');p.className='note';p.textContent='No games found.';gResults.append(p);return}
+    list.forEach(g=>{
+      const b=document.createElement('button');b.type='button';b.className='gpick';
+      const n=document.createElement('span');n.textContent=g.name;
+      const a=document.createElement('small');a.textContent=g.author?'by '+g.author:'';
+      b.append(n,a);
+      b.addEventListener('click',()=>{if(send({t:'game',gid:String(g.id),gname:clean(g.name,60)}))closePops()});
+      gResults.append(b);
+    });
+  }
+  gSearch.addEventListener('input',fillGamePicker);
+  function closePops(){emojiPanel.hidden=true;gamePanel.hidden=true}
+  $('emojibtn').addEventListener('click',()=>{const open=emojiPanel.hidden;closePops();if(open){if(!emojiBuilt)buildEmoji();emojiPanel.hidden=false}});
+  $('gamebtn').addEventListener('click',()=>{const open=gamePanel.hidden;closePops();if(open){gSearch.value='';fillGamePicker();gamePanel.hidden=false;gSearch.focus()}});
+  document.addEventListener('click',e=>{if(!e.target.closest('.pop,#emojibtn,#gamebtn'))closePops()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closePops()});
+  log.addEventListener('click',e=>{const b=e.target.closest('.gplay');if(b)playGame(b,b.dataset.gid)});
+  // ----- housekeeping -----
   addEventListener('pagehide',()=>{clearTimeout(saveT);write()});
-  let clearT=0;const clearBtn=$('chatclear');
-  clearBtn.addEventListener('click',()=>{   // two clicks, so it can't happen by accident
-    if(!clearT){clearBtn.textContent='Click again to clear';clearT=setTimeout(()=>{clearT=0;clearBtn.textContent='Clear history'},3000);return}
-    clearTimeout(clearT);clearT=0;clearBtn.textContent='Clear history';
-    Object.keys(convos).forEach(k=>{if(k==='public')convos.public.msgs=[];else delete convos[k]});
-    current='public';input.placeholder='Message everyone';
-    try{localStorage.removeItem(KEY)}catch(e){}
-    renderChips();renderLog();
+  twoClick($('chatclear'),'Clear history','Click again to clear',()=>{   // deletes saved messages and direct message threads; groups stay, but empty
+    Object.keys(convos).forEach(k=>{if(kindOf(k)==='dm')delete convos[k];else convos[k].msgs=[]});
+    write();openConvo('public');
   });
-  renderChips();renderLog();connect();
+  renderChips();renderLog();renderInvites();connect();
 }
 const viewNames=['games','shows','chat','example'];
 function show(v){viewNames.forEach(x=>document.getElementById('view-'+x).hidden=x!==v);
