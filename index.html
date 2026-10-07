@@ -3,6 +3,11 @@
 <head>
 <meta name="color-scheme" content="light">
 <meta charset="utf-8">
+<script>(function(){var L=window.__sxLog=[];window.__sxStart=Date.now();
+function add(l,a){try{var m=[].map.call(a,function(x){try{return typeof x==='string'?x:(x&&x.stack)||JSON.stringify(x)}catch(e){return String(x)}}).join(' ');L.push({t:Date.now(),l:l,m:m});if(L.length>300)L.shift()}catch(e){}}
+['log','info','warn','error','debug'].forEach(function(k){var o=console[k];console[k]=function(){add(k,arguments);try{return o.apply(console,arguments)}catch(e){}}});
+addEventListener('error',function(e){var t=e.target;if(t&&t!==window&&(t.src||t.href)){add('error',['Failed to load '+(t.src||t.href)])}else add('error',[e.message+' ('+String(e.filename||'').split('/').pop()+':'+e.lineno+')'])},true);
+addEventListener('unhandledrejection',function(e){add('error',['Unhandled promise rejection: '+(e.reason&&e.reason.message||e.reason)])})})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Envies SX</title>
 <script>try{var _s=JSON.parse(localStorage.getItem('sx_settings')||'{}'),_r=document.documentElement;if(_s.theme)_r.dataset.theme=_s.theme;if(_s.tint===false)_r.classList.add('no-tint');if(_s.blur===false)_r.classList.add('no-blur');if(_s.blobs===false)_r.classList.add('no-blobs');if(_s.notebook===false)_r.classList.add('no-notebook')}catch(e){}</script>
@@ -283,6 +288,18 @@ html.no-notebook .card::before{display:none}
 .filebtn{cursor:pointer;display:inline-block}
 #dx-box{width:100%;margin:10px 0 4px;padding:10px 14px;border-radius:var(--wob-s);border:1px solid var(--edge);background:var(--field);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
 #dx-msg{display:block;margin:0 0 4px}
+.chk{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+#emojibtn{display:inline-flex;align-items:center;padding:6px 10px}
+.linkbtn{background:none;border:0;padding:0;color:inherit;text-decoration:underline;font:inherit;cursor:pointer}
+.blobs{top:0;left:0;right:0;bottom:0}
+.art img{top:0;left:0}
+.setbox h4{margin:16px 0 6px;font:400 1.05rem 'Architects Daughter',cursive}
+.dgtable{display:grid;gap:2px}
+.dgrow{display:flex;justify-content:space-between;gap:16px;padding:4px 0;border-bottom:1px dashed var(--edge);font-size:.95rem}
+.dgrow span:first-child{color:var(--muted);flex:none}
+.dgrow span:last-child{text-align:right;overflow-wrap:anywhere}
+#dg-log{margin:8px 0 0;padding:10px 12px;max-height:260px;overflow:auto;border-radius:var(--wob-s);border:1px solid var(--edge);background:var(--field);color:var(--ink);font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.sub{margin:10px 0 36px}
 </style>
 </head>
 <body>
@@ -300,12 +317,10 @@ html.no-notebook .card::before{display:none}
   <div class="view" id="view-games"><div class="wrap hero">
     <h1>Envies&nbsp;&nbsp;SX</h1>
     <div class="sub">Explore Games &amp; Shows</div>
-    <p>A discovery hub for game fans. Browse titles, genres, streams, and community.</p>
     <div class="hub">
       <button class="hubtile" data-to="games"><strong>Games</strong><span>Browse the library and play in a new window</span></button>
       <button class="hubtile" data-view="shows"><strong>Shows</strong><span>Weekly talks, streams, and interviews</span></button>
       <button class="hubtile" data-view="chat"><strong>Chat</strong><span>Talk with other players</span></button>
-      <button class="hubtile" data-to="club"><strong>Envies Club</strong><span>Play the whole Club shelf for one price</span></button>
       <button class="hubtile" data-view="example"><strong>Example</strong><span>Reserved for future use</span></button>
     </div>
   </div>
@@ -332,7 +347,10 @@ html.no-notebook .card::before{display:none}
     "url": "https://raw.githubusercontent.com/gn-math/html/refs/heads/main/868.html",
     "author": "RobTop Games",
     "authorLink": "https://store.steampowered.com/app/322170/Geometry_Dash/",
-    "special": ["port"]
+    "special": [
+      "port"
+    ],
+    "featured": true
   },
   {
     "id": 1,
@@ -350,7 +368,10 @@ html.no-notebook .card::before{display:none}
     "url": "https://example.com/games/tidepool-racers/",
     "author": "Example Studio",
     "authorLink": "https://example.com/",
-    "special": ["port"]
+    "special": [
+      "port"
+    ],
+    "featured": true
   },
   {
     "id": 3,
@@ -368,7 +389,9 @@ html.no-notebook .card::before{display:none}
     "url": "https://example.com/games/nimbus-run/",
     "author": "Example Studio",
     "authorLink": "https://example.com/",
-    "special": ["port"]
+    "special": [
+      "port"
+    ]
   },
   {
     "id": 5,
@@ -377,26 +400,12 @@ html.no-notebook .card::before{display:none}
     "url": "https://example.com/games/hollow-orchard/",
     "author": "Example Studio",
     "authorLink": "https://example.com/",
-    "special": []
+    "special": [],
+    "featured": true
   }
 ]
     </script>
     </div></section>
-
-    <section id="club"><div class="wrap">
-    <div class="band glass">
-      <div>
-        <h2>Envies Club</h2>
-        <p>Pay once a month and play every game in the Club shelf. New titles arrive every Thursday, and you keep your saves if you leave.</p>
-        <a class="btn" href="#join">Try it free for 14 days</a>
-      </div>
-      </div>
-  </div></section>
-
-  <section id="join"><div class="wrap">
-    <h2 style="margin-bottom:18px">Get release news</h2>
-    <form class="join glass" id="form"><input type="email" required placeholder="you@example.com" aria-label="Email address"><button type="submit">Subscribe</button></form>
-  </div></section>
 </div>
   <div class="view" id="view-shows" hidden><section id="shows"><div class="wrap">
     <div class="head"><h2>Shows</h2></div>
@@ -427,7 +436,7 @@ html.no-notebook .card::before{display:none}
         <div id="emojipanel" class="pop" hidden></div>
         <div id="gamepanel" class="pop" hidden><input id="gpsearch" type="search" placeholder="Search games to send" aria-label="Search games to send" autocomplete="off"><div id="gpresults"></div></div>
         <form id="chatform">
-          <button type="button" class="tool" id="emojibtn" aria-label="Emoji">🙂</button>
+          <button type="button" class="tool" id="emojibtn" aria-label="Emoji"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2c4.9-.1 8.9 3.9 8.8 8.8s-4 8.9-8.9 8.8S3.1 16.9 3.2 12 7.2 3.3 12 3.2z"/><path d="M8.4 14.1c1 1.6 2.3 2.3 3.6 2.3s2.6-.7 3.6-2.3"/><circle cx="9" cy="9.6" r=".7" fill="currentColor"/><circle cx="15" cy="9.6" r=".7" fill="currentColor"/></svg></button>
           <button type="button" class="tool" id="gamebtn">Send game</button>
           <input id="chatin" type="text" maxlength="300" autocomplete="off" placeholder="Message everyone" aria-label="Message"><button type="submit">Send</button>
         </form>
@@ -444,19 +453,33 @@ html.no-notebook .card::before{display:none}
       <div id="themes" class="themes" role="group" aria-label="Theme"></div>
       <h3>Effects</h3>
       <label class="setrow"><span>Rain<small>Falling rain over the site</small></span><select data-set="rain" aria-label="Rain"><option value="off">Off</option><option value="light">Light</option><option value="normal">Normal</option><option value="heavy">Heavy</option></select></label>
+      <label class="setrow"><span>Show rain even if my device asks for less motion<small>Some computers turn animations off in their system settings</small></span><input type="checkbox" class="switch" data-set="rainForce"></label>
       <label class="setrow"><span>Tinted game cards<small>Covers are recolored to match the theme</small></span><input type="checkbox" class="switch" data-set="tint"></label>
       <label class="setrow"><span>Frosted glass blur<small>Turn off if the site feels slow</small></span><input type="checkbox" class="switch" data-set="blur"></label>
       <label class="setrow"><span>Background glow<small>Soft colored light behind the page</small></span><input type="checkbox" class="switch" data-set="blobs"></label>
       <label class="setrow"><span>Notebook style<small>Tilted cards, tape, and hand-drawn corners</small></span><input type="checkbox" class="switch" data-set="notebook"></label>
       <h3>Games</h3>
-      <label class="setrow"><span>Pause effects when another window is in front<small>Saves your computer's effort while you play</small></span><input type="checkbox" class="switch" data-set="pause"></label>
+      <label class="setrow"><span>Pause the rain when I'm on another tab<small>Saves your computer's effort while you play in another tab</small></span><input type="checkbox" class="switch" data-set="pause"></label>
       <label class="setrow"><span>Rain in game windows<small>Adds the rain to games you open (uses the rain setting above)</small></span><input type="checkbox" class="switch" data-set="rainGames"></label>
       <label class="setrow"><span>Envies SX icon on game tabs<small>Replaces the game's own tab icon</small></span><input type="checkbox" class="switch" data-set="icon"></label>
       <h3>Your data</h3>
-      <p class="note" style="margin:4px 0 12px">Favorites, recently played games, settings and chat history are saved in this browser. Export them to keep a backup or move to another device.</p>
-      <div class="datarow"><button type="button" class="tool" id="dx-export">Export</button><button type="button" class="tool" id="dx-copy">Copy</button><label class="tool filebtn">Choose file…<input type="file" id="dx-file" accept=".json,application/json" hidden></label><button type="button" id="dx-import">Import</button></div>
+      <p class="note" style="margin:4px 0 12px">Your favorites, settings, chat history and the save data your games keep are all stored in this browser. Export them to keep a backup or move to another device.</p>
+      <div class="datarow"><label class="chk"><input type="checkbox" id="dx-site" checked> Site data</label><label class="chk"><input type="checkbox" id="dx-games" checked> Game saves</label></div>
+      <div class="datarow" style="margin-top:8px"><button type="button" class="tool" id="dx-export">Export</button><button type="button" class="tool" id="dx-copy">Copy</button><label class="tool filebtn">Choose file…<input type="file" id="dx-file" accept=".json,application/json" hidden></label><button type="button" id="dx-import">Import</button></div>
       <textarea id="dx-box" rows="5" spellcheck="false" aria-label="Exported data" placeholder="Exported data shows up here. To import, choose a file or paste exported data here."></textarea>
       <span id="dx-msg" class="note" role="status"></span>
+      <h3>Diagnostics</h3>
+      <p class="note" style="margin:4px 0 12px">Shows what the site is doing on this computer, including the console and whether the rain canvas is running. Handy when something doesn't work.</p>
+      <div class="datarow"><button type="button" class="tool" id="dg-toggle" aria-expanded="false">Open diagnostics</button></div>
+      <div id="dg-panel" hidden>
+        <div class="datarow" style="margin:12px 0"><button type="button" class="tool" id="dg-refresh">Refresh</button><button type="button" class="tool" id="dg-test">Test rain (5 seconds)</button><button type="button" class="tool" id="dg-copy">Copy report</button></div>
+        <span id="dg-msg" class="note" role="status"></span>
+        <h4>Rain</h4><div id="dg-rain" class="dgtable"></div>
+        <h4>This device</h4><div id="dg-env" class="dgtable"></div>
+        <h4>Console</h4>
+        <div class="datarow"><label class="chk"><input type="checkbox" id="dg-errs"> Warnings and errors only</label><button type="button" class="tool" id="dg-clear">Clear</button></div>
+        <pre id="dg-log" tabindex="0" aria-label="Console output"></pre>
+      </div>
       <div class="row"><button type="button" class="tool" id="set-reset">Reset settings</button></div>
     </div>
   </div></section></div>
@@ -467,7 +490,7 @@ html.no-notebook .card::before{display:none}
   </div>
 </main>
 
-<footer><div class="wrap"><span>© 2026 Envies SX</span><span>Help · Privacy · Terms</span></div></footer>
+<footer><div class="wrap"><span>© 2026 Envies SX</span><span>Help · Privacy · Terms · <button type="button" class="linkbtn" id="open-diag">Diagnostics</button></span></div></footer>
 <button id="totop" type="button" aria-label="Back to top" hidden>↑</button>
 <div id="toast" class="glass" role="status"></div>
 
@@ -487,6 +510,8 @@ const safeUrl=u=>{u=String(u||'').trim();return u&&!/^(javascript|data|vbscript)
 const BATCH=36;          // cards added each time the page nears its end
 const PRELOAD='1200px';  // start adding more this far before the bottom of the page
 let games=[],byId=new Map(),filtered=[],shown=0,filter='all';
+let featured=[],filterTouched=false,autoAll=false;   // Featured is the starting view until you pick a chip yourself
+const shuffleKey=new Map();   // a random sort key per game, made once per page load, so the featured order changes on every load
 const ls={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const savedList=k=>{const v=ls.get(k);return Array.isArray(v)?v.map(String):[]};
 const favs=new Set(savedList('sx_favs'));        // favorite game ids, kept in localStorage
@@ -518,6 +543,7 @@ function more(){
 function apply(){
   let list=games;
   if(filter==='__fav')list=list.filter(g=>favs.has(String(g.id)));
+  else if(filter==='__featured')list=featured.slice();   // already in this page load's shuffled order
   else if(filter==='__recent')list=recent.map(id=>byId.get(id)).filter(Boolean);
   else if(filter!=='all')list=list.filter(g=>(g.special||[]).includes(filter));
   if(terms.length)list=list.filter(g=>terms.every(t=>g._s.includes(t)));
@@ -533,17 +559,29 @@ function apply(){
   }
   more();
 }
-function runSearch(){terms=searchEl.value.toLowerCase().split(/\s+/).filter(Boolean);apply()}
+const syncChips=()=>chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.g===filter));
+function runSearch(){
+  terms=searchEl.value.toLowerCase().split(/\s+/).filter(Boolean);
+  // Searching from Featured looks through every game; clearing the search brings Featured back
+  if(terms.length&&filter==='__featured'){filter='all';autoAll=true;syncChips()}
+  else if(!terms.length&&autoAll&&filter==='all'){filter='__featured';autoAll=false;syncChips()}
+  apply();
+}
 function setGames(list){
   games=list;byId=new Map(list.map(g=>[String(g.id),g]));
   list.forEach(g=>{g._s=(String(g.name||'')+' '+String(g.author||'')).toLowerCase()});   // what the search looks through
+  featured=list.filter(g=>g.featured===true);   // games marked "featured": true in games.json
+  featured.forEach(g=>{const k=String(g.id);if(!shuffleKey.has(k))shuffleKey.set(k,Math.random())});
+  featured.sort((a,b)=>shuffleKey.get(String(a.id))-shuffleKey.get(String(b.id)));
   const tags=[...new Set(list.flatMap(g=>g.special||[]))].sort();
-  if(filter!=='all'&&!filter.startsWith('__')&&!tags.includes(filter))filter='all';
-  const label=t=>t==='all'?'All':t==='__fav'?favLabel():t==='__recent'?'Recent':esc(t);
-  chipsEl.innerHTML=['all','__fav','__recent',...tags].map(t=>`<button class="chip" aria-pressed="${t===filter}" data-g="${esc(t)}">${label(t)}</button>`).join('');
+  if(!filterTouched&&!autoAll)filter=featured.length?'__featured':'all';
+  else if(filter==='__featured'&&!featured.length)filter='all';
+  else if(filter!=='all'&&!filter.startsWith('__')&&!tags.includes(filter))filter='all';
+  const label=t=>t==='all'?'All':t==='__featured'?'Featured':t==='__fav'?favLabel():t==='__recent'?'Recent':esc(t);
+  chipsEl.innerHTML=[...(featured.length?['__featured']:[]),'all','__fav','__recent',...tags].map(t=>`<button class="chip" aria-pressed="${t===filter}" data-g="${esc(t)}">${label(t)}</button>`).join('');
   apply();
 }
-chipsEl.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;filter=c.dataset.g;chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));apply()});
+chipsEl.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;filter=c.dataset.g;filterTouched=true;autoAll=false;chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));apply()});
 grid.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;  // broken cover: fall back to the gradient
   if(t.classList.contains('hq')){const l=t.parentNode.querySelector('.lq');if(l)l.remove()}t.remove()},true);
 grid.addEventListener('load',e=>{const t=e.target;if(t.tagName!=='IMG')return;t.classList.add('ok');
@@ -657,7 +695,6 @@ addEventListener('keydown',e=>{   // "/" jumps to the search box
 const toTop=document.getElementById('totop');let scrollTick=false;
 addEventListener('scroll',()=>{if(scrollTick)return;scrollTick=true;requestAnimationFrame(()=>{scrollTick=false;toTop.hidden=scrollY<1200})},{passive:true});
 toTop.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
-document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();e.target.reset();say('Subscribed. Watch your inbox.')});
 // Chat: one public room plus direct messages, sent through a free public MQTT broker (no accounts or keys).
 // Anyone can read the public room, and public test brokers carry no uptime guarantee. If you ever get your own
 // MQTT broker (or a paid one), put its wss:// address first in CHAT_BROKERS.
@@ -995,19 +1032,21 @@ show('games');
 // Works in any window:
 //   const rain = startRain(window, 30, {density, color, pauseWhenAway})   -> rain on this page
 // It creates its own canvas inside win.document and uses win's own timers (requestAnimationFrame).
-// It returns {stop(), pause(), resume()}. With pauseWhenAway it pauses itself whenever that window isn't in front.
+// It returns {stop(), pause(), resume(), info()}. With pauseWhenAway it pauses itself while that tab is hidden.
 function startRain(win=window,z=2147483647,opts={}){
   const doc=win.document;
-  const noop={stop(){},pause(){},resume(){}};
-  if(win.matchMedia('(prefers-reduced-motion: reduce)').matches)return noop;
+  const off=reason=>({stop(){},pause(){},resume(){},info(){return{active:false,reason}}});
+  if(!opts.force&&win.matchMedia('(prefers-reduced-motion: reduce)').matches)return off('Your device asks for reduced motion, so the rain stays off');
   const density=opts.density||1,color=opts.color||'#fff';
   const cv=doc.createElement('canvas');
-  cv.setAttribute('aria-hidden','true');
-  cv.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:'+z;
+  cv.setAttribute('aria-hidden','true');cv.setAttribute('data-rain','1');
+  cv.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:'+z;
   const ctx=cv.getContext('2d');
+  if(!ctx)return off('The browser would not give the page a canvas to draw on');
   const SCALE=.5;  // drawn at half size and stretched up, which also softens the drops
   const LAYERS=[{a:.10,w:.8},{a:.16,w:1},{a:.24,w:1.3},{a:.34,w:1.7}];  // far to near: opacity, thickness
   let W=0,H=0,drops=[],last=win.performance.now(),t=0,running=true,paused=false,raf=0;
+  let frames=0,fps=0,fpsN=0,fpsT=0,lastError='';
   const rnd=(a,b)=>a+Math.random()*(b-a);
   function spawn(d,anywhere){
     const l=Math.floor(Math.random()*4),k=l/3;
@@ -1022,41 +1061,50 @@ function startRain(win=window,z=2147483647,opts={}){
   }
   function frame(now){
     if(!running||paused||win.closed)return;
-    const dt=Math.min((now-last)/1000||0,.05);last=now;t+=dt;
-    const wind=.16+.07*Math.sin(t*.35)+.03*Math.sin(t*1.1);
-    ctx.clearRect(0,0,W,H);ctx.lineCap='round';ctx.strokeStyle=color;
-    for(let li=0;li<4;li++){
-      ctx.globalAlpha=LAYERS[li].a;ctx.lineWidth=LAYERS[li].w;ctx.beginPath();
-      for(const d of drops){
-        if(d.l!==li)continue;
-        const s=wind+d.j,n=Math.sqrt(1+s*s),dx=s/n,dy=1/n;
-        d.x+=dx*d.sp*dt;d.y+=dy*d.sp*dt;
-        if(d.y-d.len>H||d.x-d.len>W){spawn(d,false);continue}
-        ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-dx*d.len,d.y-dy*d.len);
+    try{
+      const dt=Math.min((now-last)/1000||0,.05);last=now;t+=dt;
+      const wind=.16+.07*Math.sin(t*.35)+.03*Math.sin(t*1.1);
+      ctx.clearRect(0,0,W,H);ctx.lineCap='round';ctx.strokeStyle=color;
+      for(let li=0;li<4;li++){
+        ctx.globalAlpha=LAYERS[li].a;ctx.lineWidth=LAYERS[li].w;ctx.beginPath();
+        for(const d of drops){
+          if(d.l!==li)continue;
+          const s=wind+d.j,n=Math.sqrt(1+s*s),dx=s/n,dy=1/n;
+          d.x+=dx*d.sp*dt;d.y+=dy*d.sp*dt;
+          if(d.y-d.len>H||d.x-d.len>W){spawn(d,false);continue}
+          ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-dx*d.len,d.y-dy*d.len);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
-    }
+      frames++;fpsN++;if(!fpsT)fpsT=now;
+      if(now-fpsT>=1000){fps=Math.round(fpsN*1000/(now-fpsT));fpsN=0;fpsT=now}
+    }catch(e){lastError=String(e&&e.message||e);running=false;try{console.error('Rain stopped:',e)}catch(x){}return}
     raf=win.requestAnimationFrame(frame);
   }
   function pause(){if(paused||!running)return;paused=true;win.cancelAnimationFrame(raf);cv.style.visibility='hidden'}
   function resume(){if(!paused||!running)return;paused=false;last=win.performance.now();cv.style.visibility='';raf=win.requestAnimationFrame(frame)}
-  const check=()=>{if(doc.hidden||!doc.hasFocus())pause();else resume()};
+  const check=()=>{if(doc.hidden)pause();else resume()};   // only when the tab is hidden, not when you click the address bar or another window
   function start(){
     if(!running)return;
     doc.documentElement.appendChild(cv);  // on <html>, so it survives the page replacing its <body>
     size();win.addEventListener('resize',size);raf=win.requestAnimationFrame(frame);
-    if(opts.pauseWhenAway){win.addEventListener('blur',check);win.addEventListener('focus',check);doc.addEventListener('visibilitychange',check)}
+    if(opts.pauseWhenAway)doc.addEventListener('visibilitychange',check);
   }
   if(doc.documentElement)start();else doc.addEventListener('DOMContentLoaded',start,{once:true});
-  return{pause,resume,stop(){
+  function info(){   // what the Diagnostics page shows
+    let st={};
+    try{const c=win.getComputedStyle(cv),r=cv.getBoundingClientRect();st={position:c.position,display:c.display,visibility:c.visibility,opacity:c.opacity,box:Math.round(r.width)+'x'+Math.round(r.height)}}catch(e){}
+    return{active:running&&!paused,running,paused,attached:cv.isConnected,canvas:W+'x'+H,drops:drops.length,frames,fps,error:lastError,style:st,hidden:doc.hidden,focused:doc.hasFocus()};
+  }
+  return{pause,resume,info,stop(){
     running=false;win.cancelAnimationFrame(raf);win.removeEventListener('resize',size);
-    win.removeEventListener('blur',check);win.removeEventListener('focus',check);doc.removeEventListener('visibilitychange',check);cv.remove();
+    doc.removeEventListener('visibilitychange',check);cv.remove();
   }};
 }
 
 // ---------- Settings ----------
 const THEMES=[['rainy','Rainy grey','#4f5052'],['midnight','Midnight','#272f47'],['forest','Forest','#2f3e37'],['sand','Sand','#5a4f44'],['light','Light','#ebe8e3']];
-const DEFAULTS={theme:'rainy',rain:'normal',tint:true,blur:true,blobs:true,notebook:true,pause:true,rainGames:false,icon:true};
+const DEFAULTS={theme:'rainy',rain:'normal',rainForce:true,tint:true,blur:true,blobs:true,notebook:true,pause:true,rainGames:false,icon:true};
 const RAIN_DENSITY={light:.5,normal:1,heavy:1.8};
 let settings={...DEFAULTS},rainCtl=null;
 (function(){   // read what was saved, ignoring anything that doesn't look right
@@ -1067,7 +1115,7 @@ let settings={...DEFAULTS},rainCtl=null;
 })();
 const rainColor=()=>getComputedStyle(document.documentElement).getPropertyValue('--rain-color').trim()||'#ffffff';
 function rainSnippet(){   // the rain, as a <script> that can be placed inside a game's page
-  return '<script>(function(){var f='+startRain.toString()+';try{f(window,2147483647,{density:'+RAIN_DENSITY[settings.rain]+',color:'+JSON.stringify(rainColor())+'})}catch(e){}})()<\/script>';
+  return '<script>(function(){var f='+startRain.toString()+';try{f(window,2147483647,{density:'+RAIN_DENSITY[settings.rain]+',color:'+JSON.stringify(rainColor())+',force:'+!!settings.rainForce+'})}catch(e){}})()<\/script>';
 }
 const themesEl=document.getElementById('themes');
 THEMES.forEach(([id,label,color])=>{
@@ -1090,13 +1138,15 @@ function applySettings(){
   themesEl.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.theme===settings.theme));
   document.querySelectorAll('[data-set]').forEach(el=>{const v=settings[el.dataset.set];if(el.type==='checkbox')el.checked=!!v;else el.value=v});
   if(rainCtl){rainCtl.stop();rainCtl=null}
-  if(settings.rain!=='off')rainCtl=startRain(window,30,{density:RAIN_DENSITY[settings.rain],color:rainColor(),pauseWhenAway:settings.pause});
+  if(settings.rain!=='off')rainCtl=startRain(window,30,{density:RAIN_DENSITY[settings.rain],color:rainColor(),pauseWhenAway:settings.pause,force:settings.rainForce});
 }
 document.querySelectorAll('[data-set]').forEach(el=>el.addEventListener('change',()=>{
   settings[el.dataset.set]=el.type==='checkbox'?el.checked:el.value;saveSettings();applySettings();
 }));
 document.getElementById('set-reset').addEventListener('click',()=>{settings={...DEFAULTS};saveSettings();applySettings();say('Settings reset')});
 // ---------- Export / import your data ----------
+// "Site data" is what this site keeps (keys starting with sx_). "Game saves" is everything else in this browser's
+// localStorage: games run in windows that share this site's storage, so their saves end up there too.
 const DATA_KEYS=['sx_favs','sx_recent','sx_sort','sx_settings','sx_chat','sx_name'];
 const DATA_CHECK={
   sx_favs:Array.isArray,sx_recent:Array.isArray,
@@ -1105,13 +1155,22 @@ const DATA_CHECK={
   sx_chat:v=>!!v&&typeof v==='object'&&!Array.isArray(v)
 };
 const dxBox=document.getElementById('dx-box'),dxMsg=document.getElementById('dx-msg');
+const dxSite=document.getElementById('dx-site'),dxGames=document.getElementById('dx-games');
 const dxSay=t=>{dxMsg.textContent=t};
 let dxArmed='';
+function gameKeys(){
+  const ks=[];
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&!k.startsWith('sx_'))ks.push(k)}}catch(e){}
+  return ks;
+}
 function buildExport(){
   flushChat();
-  const data={};
-  DATA_KEYS.forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)data[k]=v}catch(e){}});
-  return JSON.stringify({app:'envies-sx',version:1,exported:new Date().toISOString(),data},null,2);
+  const data={},saves={};
+  if(dxSite.checked)DATA_KEYS.forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)data[k]=v}catch(e){}});
+  if(dxGames.checked)gameKeys().forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)saves[k]=v}catch(e){}});
+  const out={app:'envies-sx',version:2,exported:new Date().toISOString(),data};
+  if(dxGames.checked)out.games=saves;
+  return{text:JSON.stringify(out,null,1),siteN:Object.keys(data).length,gameN:Object.keys(saves).length};
 }
 function parseExport(text){
   text=String(text||'').trim();
@@ -1126,26 +1185,44 @@ function parseExport(text){
     let v;try{v=JSON.parse(raw)}catch(e){return}
     if(DATA_CHECK[k](v))out[k]=raw;
   });
-  const keys=Object.keys(out);
-  if(!keys.length)return{ok:false,error:'Nothing in there can be imported.'};
+  const saves={};let total=0;
+  if(d.games&&typeof d.games==='object'&&!Array.isArray(d.games)){
+    for(const [k,v] of Object.entries(d.games)){
+      if(typeof v!=='string'||k.length>200||k.startsWith('sx_'))continue;
+      total+=k.length+v.length;if(total>4.5e6)break;
+      saves[k]=v;
+    }
+  }
+  const gameN=Object.keys(saves).length;
+  if(!Object.keys(out).length&&!gameN)return{ok:false,error:'Nothing in there can be imported.'};
   const n=k=>{try{return JSON.parse(out[k])}catch(e){return null}};
   const chat=n('sx_chat'),count=a=>Array.isArray(a)?a.length:0;
   const msgs=chat?count(chat.public)+Object.values(chat.dms||{}).reduce((a,t)=>a+count(t&&t.msgs),0)+Object.values(chat.groups||{}).reduce((a,t)=>a+count(t&&t.msgs),0):0;
-  return{ok:true,data:out,summary:count(n('sx_favs'))+' favorites, '+msgs+' saved chat messages'};
+  const parts=[];
+  if(Object.keys(out).length)parts.push(count(n('sx_favs'))+' favorites, '+msgs+' saved chat messages');
+  if(gameN)parts.push(gameN+' game save '+(gameN===1?'entry':'entries'));
+  return{ok:true,data:out,games:saves,summary:parts.join(', ')};
 }
 document.getElementById('dx-export').addEventListener('click',()=>{
-  const text=buildExport();dxBox.value=text;dxArmed='';
+  if(!dxSite.checked&&!dxGames.checked){dxSay('Tick at least one thing to export.');return}
+  const {text,siteN,gameN}=buildExport();dxArmed='';
+  dxBox.value=text.length>300000?'':text;   // very large exports go to the file only, so the page stays quick
+  const info='Exported '+siteN+' site items and '+gameN+' game save entries ('+Math.round(text.length/1024)+' KB).';
   try{
     const u=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');
     a.href=u;a.download='envies-sx-data-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(u),2000);
-    dxSay('Exported. If no file downloaded, use Copy or copy the text below.');
-  }catch(e){dxSay('Copy the text below to save it.')}
+    dxSay(info+(dxBox.value?' If no file downloaded, use Copy.':' It is too big to show here, so it was saved as a file.'));
+  }catch(e){dxSay(info+' Use Copy to save it.')}
 });
 document.getElementById('dx-copy').addEventListener('click',async()=>{
-  if(!dxBox.value)dxBox.value=buildExport();
-  dxBox.select();
-  try{await navigator.clipboard.writeText(dxBox.value);dxSay('Copied.')}catch(e){try{document.execCommand('copy');dxSay('Copied.')}catch(x){dxSay('Press Ctrl+C (or Cmd+C) to copy the selected text.')}}
+  if(!dxSite.checked&&!dxGames.checked&&!dxBox.value){dxSay('Tick at least one thing to export.');return}
+  const text=dxBox.value||buildExport().text;
+  if(dxBox.value)dxBox.select();
+  try{await navigator.clipboard.writeText(text);dxSay('Copied.')}catch(e){
+    if(dxBox.value){try{document.execCommand('copy');dxSay('Copied.')}catch(x){dxSay('Press Ctrl+C (or Cmd+C) to copy the selected text.')}}
+    else dxSay('Your browser blocked copying. Use Export to save a file instead.');
+  }
 });
 document.getElementById('dx-file').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];if(!f)return;
@@ -1159,12 +1236,107 @@ dxBox.addEventListener('input',()=>{dxArmed=''});
 document.getElementById('dx-import').addEventListener('click',()=>{
   const r=parseExport(dxBox.value);
   if(!r.ok){dxSay(r.error);return}
-  if(dxArmed!==dxBox.value){dxArmed=dxBox.value;dxSay('This replaces your current favorites, settings and chat history with: '+r.summary+'. Click Import again to continue.');return}
+  if(dxArmed!==dxBox.value){dxArmed=dxBox.value;dxSay('This overwrites matching data in this browser with: '+r.summary+'. Click Import again to continue.');return}
   skipChatSave=true;   // so the chat that's open can't write over what was just imported
-  try{Object.keys(r.data).forEach(k=>localStorage.setItem(k,r.data[k]))}catch(e){skipChatSave=false;dxSay('Could not save the imported data in this browser.');return}
+  try{
+    Object.keys(r.data).forEach(k=>localStorage.setItem(k,r.data[k]));
+    Object.keys(r.games).forEach(k=>localStorage.setItem(k,r.games[k]));
+  }catch(e){skipChatSave=false;dxSay('Could not save all of it in this browser (it may be full).');return}
   dxSay('Imported. Reloading…');
   setTimeout(()=>{try{location.reload()}catch(e){}},400);
 });
+// ---------- Diagnostics ----------
+const dgPanel=document.getElementById('dg-panel'),dgToggle=document.getElementById('dg-toggle'),dgMsg=document.getElementById('dg-msg');
+let dgTimer=0,rafState='not tested',testCtl=null;
+function measureRaf(){   // do animation frames actually arrive? (they don't in hidden or throttled windows)
+  rafState='testing…';let n=0,t0=null,done=false;
+  const f=ts=>{if(done)return;if(t0===null)t0=ts;n++;if(ts-t0<500)requestAnimationFrame(f);else{done=true;rafState=Math.round(n*1000/(ts-t0))+' frames per second';renderDiag()}};
+  requestAnimationFrame(f);
+  setTimeout(()=>{if(!done){done=true;rafState='none';renderDiag()}},1500);
+}
+function canDraw(){   // draws a pixel and reads it back, which some privacy tools block
+  try{const c=document.createElement('canvas');c.width=c.height=2;const x=c.getContext('2d');if(!x)return false;x.fillStyle='#fff';x.fillRect(0,0,2,2);return x.getImageData(0,0,1,1).data[3]===255}catch(e){return false}
+}
+function diagRows(){
+  const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const inf=rainCtl&&rainCtl.info?rainCtl.info():null;
+  const rain=[],env=[],sup=(p,v)=>{try{return !!(window.CSS&&CSS.supports(p,v))}catch(e){return false}};
+  rain.push(['Rain setting',settings.rain==='off'?'Off':settings.rain,settings.rain==='off'?false:undefined]);
+  rain.push(['Device asks for reduced motion',rm?'Yes'+(settings.rainForce?' (ignored, because of the setting above)':' (rain stays off unless you tick the setting above)'):'No',rm?!!settings.rainForce:true]);
+  if(settings.rain==='off')rain.push(['Rain','Not started',false]);
+  else if(!inf)rain.push(['Rain','Not started',false]);
+  else if(inf.reason)rain.push(['Rain','Not running: '+inf.reason,false]);
+  else{
+    rain.push(['Rain animation',!inf.running?'Stopped':inf.paused?'Paused (this tab is hidden)':'Running',inf.active]);
+    rain.push(['Canvas on the page',inf.attached?'Yes':'No',inf.attached]);
+    rain.push(['Canvas size',inf.canvas+' pixels, '+inf.style.box+' on screen']);
+    rain.push(['Canvas visible',inf.style.visibility==='visible'&&inf.style.display!=='none'&&inf.style.opacity!=='0'?'Yes':'No ('+inf.style.visibility+', '+inf.style.display+', opacity '+inf.style.opacity+')',inf.style.visibility==='visible'&&inf.style.display!=='none']);
+    rain.push(['Frames drawn',inf.frames+(inf.fps?' ('+inf.fps+' per second)':''),inf.frames>0]);
+    rain.push(['Raindrops',String(inf.drops)]);
+    if(inf.error)rain.push(['Error',inf.error,false]);
+  }
+  rain.push(['Canvas can draw',canDraw()?'Yes':'No (something is blocking canvas)',canDraw()]);
+  rain.push(['Browser animation clock',rafState,rafState==='none'?false:undefined]);
+  rain.push(['This page is',document.hidden?'Hidden':document.hasFocus()?'In front':'Visible but not focused']);
+  env.push(['Browser',navigator.userAgent]);
+  env.push(['Screen / window',screen.width+'x'+screen.height+' / '+innerWidth+'x'+innerHeight+' at '+(window.devicePixelRatio||1)+'x']);
+  env.push(['CPU cores / memory',(navigator.hardwareConcurrency||'?')+' / '+(navigator.deviceMemory?navigator.deviceMemory+' GB':'?')]);
+  env.push(['Language / online',(navigator.language||'?')+' / '+(navigator.onLine?'yes':'no')]);
+  env.push(['Secure page (https)',window.isSecureContext?'Yes':'No',window.isSecureContext]);
+  env.push(['Inside another page (iframe)',window.top!==window?'Yes':'No']);
+  let ls_ok=true;try{localStorage.setItem('sx_t','1');localStorage.removeItem('sx_t')}catch(e){ls_ok=false}
+  env.push(['Saving data in browser',ls_ok?'Works':'Blocked',ls_ok]);
+  [['Frosted glass blur',sup('backdrop-filter','blur(1px)')],['Positioning shorthand (inset)',sup('inset','0')],['Tilted cards (rotate)',sup('rotate','1deg')],['Color mixing',sup('color','color-mix(in srgb,red,blue)')],['Web sockets (chat)',typeof WebSocket!=='undefined'],['Tab locks (chat tabs)',!!navigator.locks]]
+    .forEach(([l,v])=>env.push([l,v?'Supported':'Not supported',v]));
+  const cs=document.getElementById('chatstatus');
+  env.push(['Chat',cs?cs.textContent:'(not opened yet)']);
+  return{rain,env};
+}
+function fillTable(el,rows){
+  el.textContent='';
+  rows.forEach(([label,val,ok])=>{
+    const r=document.createElement('div'),a=document.createElement('span'),b=document.createElement('span');
+    r.className='dgrow';a.textContent=label;b.textContent=(ok===true?'✓ ':ok===false?'✗ ':'')+val;r.append(a,b);el.append(r);
+  });
+}
+function logLines(){
+  const t0=window.__sxStart||Date.now(),errsOnly=document.getElementById('dg-errs').checked;
+  return (window.__sxLog||[]).filter(e=>!errsOnly||e.l==='warn'||e.l==='error').map(e=>'+'+((e.t-t0)/1000).toFixed(1)+'s ['+e.l+'] '+e.m);
+}
+function renderDiag(){
+  if(dgPanel.hidden||document.getElementById('view-settings').hidden)return;
+  const {rain,env}=diagRows();
+  fillTable(document.getElementById('dg-rain'),rain);fillTable(document.getElementById('dg-env'),env);
+  const lg=document.getElementById('dg-log'),atEnd=lg.scrollTop+lg.clientHeight>=lg.scrollHeight-8;
+  lg.textContent=logLines().join('\n')||'(nothing logged yet)';
+  if(atEnd)lg.scrollTop=lg.scrollHeight;
+}
+function openDiag(open){
+  dgPanel.hidden=!open;dgToggle.setAttribute('aria-expanded',String(open));dgToggle.textContent=open?'Close diagnostics':'Open diagnostics';
+  clearInterval(dgTimer);
+  if(open){measureRaf();renderDiag();dgTimer=setInterval(renderDiag,1000)}
+}
+dgToggle.addEventListener('click',()=>openDiag(dgPanel.hidden));
+document.getElementById('dg-refresh').addEventListener('click',()=>{measureRaf();renderDiag()});
+document.getElementById('dg-clear').addEventListener('click',()=>{if(window.__sxLog)window.__sxLog.length=0;renderDiag()});
+document.getElementById('dg-errs').addEventListener('change',renderDiag);
+document.getElementById('dg-test').addEventListener('click',()=>{
+  if(testCtl)return;
+  testCtl=startRain(window,2147483000,{density:3,color:rainColor(),force:true});
+  dgMsg.textContent='Test running for 5 seconds. Can you see rain falling over the page? If yes, rain works on this computer. If not, look at the table below.';
+  setTimeout(()=>{testCtl.stop();testCtl=null;dgMsg.textContent='Test finished.';renderDiag()},5000);
+});
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);return true}catch(e){}
+  try{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(e){return false}
+}
+document.getElementById('dg-copy').addEventListener('click',async()=>{
+  const {rain,env}=diagRows();
+  const fmt=rows=>rows.map(r=>r[0]+': '+r[1]).join('\n');
+  const text='Envies SX diagnostics, '+new Date().toISOString()+'\n\n[Rain]\n'+fmt(rain)+'\n\n[This device]\n'+fmt(env)+'\n\n[Settings]\n'+JSON.stringify(settings)+'\n\n[Console]\n'+(logLines().join('\n')||'(empty)');
+  dgMsg.textContent=(await copyText(text))?'Report copied.':'Your browser blocked copying. Select the console text and copy it by hand.';
+});
+document.getElementById('open-diag').addEventListener('click',()=>{show('settings');openDiag(true);dgPanel.scrollIntoView({behavior:'smooth',block:'start'})});
 applySettings();
 </script>
 </body>
