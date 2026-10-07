@@ -279,6 +279,10 @@ html.no-notebook .card::before{display:none}
 .themes .chip{text-transform:none}
 .themes .dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:-2px;border:1px solid var(--edge)}
 .setbox .row{margin-top:18px}
+.datarow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filebtn{cursor:pointer;display:inline-block}
+#dx-box{width:100%;margin:10px 0 4px;padding:10px 14px;border-radius:var(--wob-s);border:1px solid var(--edge);background:var(--field);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+#dx-msg{display:block;margin:0 0 4px}
 </style>
 </head>
 <body>
@@ -448,6 +452,11 @@ html.no-notebook .card::before{display:none}
       <label class="setrow"><span>Pause effects when another window is in front<small>Saves your computer's effort while you play</small></span><input type="checkbox" class="switch" data-set="pause"></label>
       <label class="setrow"><span>Rain in game windows<small>Adds the rain to games you open (uses the rain setting above)</small></span><input type="checkbox" class="switch" data-set="rainGames"></label>
       <label class="setrow"><span>Envies SX icon on game tabs<small>Replaces the game's own tab icon</small></span><input type="checkbox" class="switch" data-set="icon"></label>
+      <h3>Your data</h3>
+      <p class="note" style="margin:4px 0 12px">Favorites, recently played games, settings and chat history are saved in this browser. Export them to keep a backup or move to another device.</p>
+      <div class="datarow"><button type="button" class="tool" id="dx-export">Export</button><button type="button" class="tool" id="dx-copy">Copy</button><label class="tool filebtn">Choose file…<input type="file" id="dx-file" accept=".json,application/json" hidden></label><button type="button" id="dx-import">Import</button></div>
+      <textarea id="dx-box" rows="5" spellcheck="false" aria-label="Exported data" placeholder="Exported data shows up here. To import, choose a file or paste exported data here."></textarea>
+      <span id="dx-msg" class="note" role="status"></span>
       <div class="row"><button type="button" class="tool" id="set-reset">Reset settings</button></div>
     </div>
   </div></section></div>
@@ -550,9 +559,7 @@ function openGame(game) {
 }
 
 const GAME_TIMEOUT_MS=15000;   // give up if a game takes longer than this to download
-const gameBlobs=[];            // addresses of recently opened games (the newest few are kept alive so a reload works)
-
-// Gets a game's HTML ready to open as its own page: relative links keep working, the tab icon is set,
+// Gets a game's HTML ready to write into the new window: relative links keep working, the tab icon is set,
 // and the rain is added if it's switched on in Settings.
 function prepareGamePage(html, url) {
   const inject = [];
@@ -575,6 +582,7 @@ function prepareGamePage(html, url) {
 }
 
 async function fetchAndOpenHtml(url) {
+  let newWindow = null;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), GAME_TIMEOUT_MS);
   try {
@@ -589,27 +597,26 @@ async function fetchAndOpenHtml(url) {
     const htmlContent = await response.text();
     clearTimeout(timer);
     
-    // Turn the game into its own page and open it with "noopener". The game window is then fully separate
-    // from this one, so if the game freezes or crashes, this site keeps running.
-    const blobUrl = URL.createObjectURL(new Blob([prepareGamePage(htmlContent, url)], { type: 'text/html' }));
-    gameBlobs.push(blobUrl);
-    while (gameBlobs.length > 5) URL.revokeObjectURL(gameBlobs.shift());
+    // Open a new blank window (about:blank)
+    newWindow = window.open('', '_blank');
     
-    // With "noopener" the browser gives no sign of a blocked pop-up, so watch for this page losing focus instead
-    let left = false;
-    const mark = () => { left = true; };
-    window.addEventListener('blur', mark, { once: true });
-    document.addEventListener('visibilitychange', mark, { once: true });
-    window.open(blobUrl, '_blank', 'noopener');
-    setTimeout(() => {
-      window.removeEventListener('blur', mark);
-      document.removeEventListener('visibilitychange', mark);
-      if (!left) say("If the game didn't open, allow pop-ups for this site and try again.");
-    }, 1200);
+    if (!newWindow) {
+      say('Your browser blocked the new window. Allow pop-ups for this site and try again.');
+      return;
+    }
+    
+    // Write the game into the new window's document (with the base address, tab icon and optional rain added)
+    newWindow.document.open();
+    newWindow.document.write(prepareGamePage(htmlContent, url));
+    newWindow.document.close();
+    // The game can no longer reach this page through window.opener
+    try { newWindow.opener = null; } catch (e) {}
     
   } catch (error) {
     clearTimeout(timer);
     console.error('Failed to fetch and open HTML:', error);
+    // Don't leave an empty window behind
+    if (newWindow && !newWindow.closed) { try { newWindow.close(); } catch (e) {} }
     say(error && error.name === 'AbortError' ? 'That game took too long to load.' : 'Could not open that game. Please try again.');
   }
 }
@@ -660,6 +667,7 @@ const CHAT_NS='envies-sx/v1';   // topic prefix that keeps this site's chat sepa
 const CHAT_BROKERS=['wss://mqtt.eclipseprojects.io:443/mqtt','wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
 const MQTT_JS='https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js';
 let chatStarted=false;
+let skipChatSave=false,flushChat=()=>{};   // used by Import so the open chat can't overwrite imported history
 function loadChat(){   // runs the first time the Chat page is opened
   if(chatStarted)return;
   chatStarted=true;
@@ -721,13 +729,14 @@ async function startChat(){
   }
   let saveT=0;
   function write(){
-    if(!persistent)return;
+    if(!persistent||skipChatSave)return;
     const dms={},groups={};
     Object.keys(convos).forEach(k=>{const c=convos[k],kd=kindOf(k);
       if(kd==='dm')dms[k]={title:c.title,msgs:c.msgs};else if(kd==='group')groups[c.gid]={title:c.title,msgs:c.msgs}});
     store(KEY,JSON.stringify({v:2,public:convos.public.msgs,dms,groups}));
   }
   const save=()=>{clearTimeout(saveT);saveT=setTimeout(write,300)};
+  flushChat=()=>{clearTimeout(saveT);write()};
   load();
   const peers=new Map();   // id -> {name, seen}
   const invites=new Map(); // groupId -> {gid, gname, from}
@@ -1087,7 +1096,75 @@ document.querySelectorAll('[data-set]').forEach(el=>el.addEventListener('change'
   settings[el.dataset.set]=el.type==='checkbox'?el.checked:el.value;saveSettings();applySettings();
 }));
 document.getElementById('set-reset').addEventListener('click',()=>{settings={...DEFAULTS};saveSettings();applySettings();say('Settings reset')});
-addEventListener('pagehide',()=>gameBlobs.forEach(u=>URL.revokeObjectURL(u)));
+// ---------- Export / import your data ----------
+const DATA_KEYS=['sx_favs','sx_recent','sx_sort','sx_settings','sx_chat','sx_name'];
+const DATA_CHECK={
+  sx_favs:Array.isArray,sx_recent:Array.isArray,
+  sx_sort:v=>['default','az','za'].includes(v),
+  sx_settings:v=>!!v&&typeof v==='object'&&!Array.isArray(v),
+  sx_chat:v=>!!v&&typeof v==='object'&&!Array.isArray(v)
+};
+const dxBox=document.getElementById('dx-box'),dxMsg=document.getElementById('dx-msg');
+const dxSay=t=>{dxMsg.textContent=t};
+let dxArmed='';
+function buildExport(){
+  flushChat();
+  const data={};
+  DATA_KEYS.forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)data[k]=v}catch(e){}});
+  return JSON.stringify({app:'envies-sx',version:1,exported:new Date().toISOString(),data},null,2);
+}
+function parseExport(text){
+  text=String(text||'').trim();
+  if(!text)return{ok:false,error:'Paste exported data or choose a file first.'};
+  if(text.length>5e6)return{ok:false,error:'That is too large to be Envies SX data.'};
+  let d;try{d=JSON.parse(text)}catch(e){return{ok:false,error:"That doesn't look like exported data."}}
+  if(!d||d.app!=='envies-sx'||!d.data||typeof d.data!=='object')return{ok:false,error:"That isn't Envies SX data."};
+  const out={};
+  DATA_KEYS.forEach(k=>{
+    const raw=d.data[k];if(typeof raw!=='string'||raw.length>4e6)return;
+    if(k==='sx_name'){if(raw.length<=20)out[k]=raw;return}
+    let v;try{v=JSON.parse(raw)}catch(e){return}
+    if(DATA_CHECK[k](v))out[k]=raw;
+  });
+  const keys=Object.keys(out);
+  if(!keys.length)return{ok:false,error:'Nothing in there can be imported.'};
+  const n=k=>{try{return JSON.parse(out[k])}catch(e){return null}};
+  const chat=n('sx_chat'),count=a=>Array.isArray(a)?a.length:0;
+  const msgs=chat?count(chat.public)+Object.values(chat.dms||{}).reduce((a,t)=>a+count(t&&t.msgs),0)+Object.values(chat.groups||{}).reduce((a,t)=>a+count(t&&t.msgs),0):0;
+  return{ok:true,data:out,summary:count(n('sx_favs'))+' favorites, '+msgs+' saved chat messages'};
+}
+document.getElementById('dx-export').addEventListener('click',()=>{
+  const text=buildExport();dxBox.value=text;dxArmed='';
+  try{
+    const u=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');
+    a.href=u;a.download='envies-sx-data-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),2000);
+    dxSay('Exported. If no file downloaded, use Copy or copy the text below.');
+  }catch(e){dxSay('Copy the text below to save it.')}
+});
+document.getElementById('dx-copy').addEventListener('click',async()=>{
+  if(!dxBox.value)dxBox.value=buildExport();
+  dxBox.select();
+  try{await navigator.clipboard.writeText(dxBox.value);dxSay('Copied.')}catch(e){try{document.execCommand('copy');dxSay('Copied.')}catch(x){dxSay('Press Ctrl+C (or Cmd+C) to copy the selected text.')}}
+});
+document.getElementById('dx-file').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  if(f.size>5e6){dxSay('That file is too large.');return}
+  const r=new FileReader();
+  r.onload=()=>{dxBox.value=String(r.result);dxArmed='';dxSay('File loaded. Click Import to continue.')};
+  r.onerror=()=>dxSay('Could not read that file.');
+  r.readAsText(f);e.target.value='';
+});
+dxBox.addEventListener('input',()=>{dxArmed=''});
+document.getElementById('dx-import').addEventListener('click',()=>{
+  const r=parseExport(dxBox.value);
+  if(!r.ok){dxSay(r.error);return}
+  if(dxArmed!==dxBox.value){dxArmed=dxBox.value;dxSay('This replaces your current favorites, settings and chat history with: '+r.summary+'. Click Import again to continue.');return}
+  skipChatSave=true;   // so the chat that's open can't write over what was just imported
+  try{Object.keys(r.data).forEach(k=>localStorage.setItem(k,r.data[k]))}catch(e){skipChatSave=false;dxSay('Could not save the imported data in this browser.');return}
+  dxSay('Imported. Reloading…');
+  setTimeout(()=>{try{location.reload()}catch(e){}},400);
+});
 applySettings();
 </script>
 </body>
