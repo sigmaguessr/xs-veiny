@@ -307,9 +307,9 @@ html.no-notebook .card::before{display:none}
 
 <aside class="side" aria-label="Main">
   <button class="nav" data-view="games">Games</button>
-  <button class="nav" data-view="shows">Shows</button>
+  <button class="nav" data-view="shows" hidden>Shows</button>
   <button class="nav" data-view="chat">Chat</button>
-  <button class="nav" data-view="example">Example</button>
+  <button class="nav" data-view="example" hidden>Example</button>
   <button class="nav" data-view="settings">Settings</button>
 </aside>
 
@@ -319,9 +319,9 @@ html.no-notebook .card::before{display:none}
     <div class="sub">Explore Games &amp; Shows</div>
     <div class="hub">
       <button class="hubtile" data-to="games"><strong>Games</strong><span>Browse the library and play in a new window</span></button>
-      <button class="hubtile" data-view="shows"><strong>Shows</strong><span>Weekly talks, streams, and interviews</span></button>
+      <button class="hubtile" data-view="shows" hidden><strong>Shows</strong><span>Weekly talks, streams, and interviews</span></button>
       <button class="hubtile" data-view="chat"><strong>Chat</strong><span>Talk with other players</span></button>
-      <button class="hubtile" data-view="example"><strong>Example</strong><span>Reserved for future use</span></button>
+      <button class="hubtile" data-view="example" hidden><strong>Example</strong><span>Reserved for future use</span></button>
     </div>
   </div>
 
@@ -453,6 +453,7 @@ html.no-notebook .card::before{display:none}
       <div id="themes" class="themes" role="group" aria-label="Theme"></div>
       <h3>Effects</h3>
       <label class="setrow"><span>Rain<small>Falling rain over the site</small></span><select data-set="rain" aria-label="Rain"><option value="off">Off</option><option value="light">Light</option><option value="normal">Normal</option><option value="heavy">Heavy</option></select></label>
+      <label class="setrow"><span>Rain type<small>Video uses less energy. It needs rain.mp4 (and rain.webm) next to this page. If it can't load, the rain is drawn live instead.</small></span><select data-set="rainStyle" aria-label="Rain type"><option value="video">Video (less energy)</option><option value="canvas">Drawn live</option></select></label>
       <label class="setrow"><span>Show rain even if my device asks for less motion<small>Some computers turn animations off in their system settings</small></span><input type="checkbox" class="switch" data-set="rainForce"></label>
       <label class="setrow"><span>Tinted game cards<small>Covers are recolored to match the theme</small></span><input type="checkbox" class="switch" data-set="tint"></label>
       <label class="setrow"><span>Frosted glass blur<small>Turn off if the site feels slow</small></span><input type="checkbox" class="switch" data-set="blur"></label>
@@ -578,7 +579,7 @@ function setGames(list){
   else if(filter==='__featured'&&!featured.length)filter='all';
   else if(filter!=='all'&&!filter.startsWith('__')&&!tags.includes(filter))filter='all';
   const label=t=>t==='all'?'All':t==='__featured'?'Featured':t==='__fav'?favLabel():t==='__recent'?'Recent':esc(t);
-  chipsEl.innerHTML=[...(featured.length?['__featured']:[]),'all','__fav','__recent',...tags].map(t=>`<button class="chip" aria-pressed="${t===filter}" data-g="${esc(t)}">${label(t)}</button>`).join('');
+  chipsEl.innerHTML=['all',...(featured.length?['__featured']:[]),'__fav','__recent',...tags].map(t=>`<button class="chip" aria-pressed="${t===filter}" data-g="${esc(t)}">${label(t)}</button>`).join('');
   apply();
 }
 chipsEl.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;filter=c.dataset.g;filterTouched=true;autoAll=false;chipsEl.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));apply()});
@@ -1102,20 +1103,71 @@ function startRain(win=window,z=2147483647,opts={}){
   }};
 }
 
+// Rain as a looping video laid over the page. Hardware decoders play video very efficiently, so this costs the
+// computer less than drawing the rain live. The video is white streaks on black; "screen" blending makes the
+// black vanish. (On a light theme it is inverted and multiplied instead.)
+// opts: {sources:[[url,type],...], opacity, light, force, pauseWhenAway, onFail(reason)}
+// Like startRain it works in any window and returns {stop(), pause(), resume(), info()}.
+function startRainVideo(win=window,z=2147483647,opts={}){
+  const doc=win.document;
+  const off=reason=>({stop(){},pause(){},resume(){},info(){return{kind:'video',active:false,reason}}});
+  if(!opts.force&&win.matchMedia('(prefers-reduced-motion: reduce)').matches)return off('Your device asks for reduced motion, so the rain stays off');
+  const v=doc.createElement('video');
+  v.setAttribute('aria-hidden','true');v.setAttribute('data-rain','video');v.setAttribute('muted','');v.setAttribute('playsinline','');
+  v.muted=true;v.defaultMuted=true;v.loop=true;v.autoplay=true;v.playsInline=true;v.disablePictureInPicture=true;v.preload='auto';
+  v.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:'+z+';opacity:'+(opts.opacity==null?.8:opts.opacity)+';'+(opts.light?'filter:invert(1);mix-blend-mode:multiply':'mix-blend-mode:screen');
+  let stopped=false,failed=false,loaded=false,timer=0,bad=0,why='';
+  const list=opts.sources||[];
+  function fail(reason){
+    if(stopped||failed)return;
+    failed=true;why=reason;clearTimeout(timer);try{v.pause();v.remove()}catch(e){}
+    try{console.warn('Rain video failed: '+reason)}catch(x){}
+    if(opts.onFail)opts.onFail(reason);
+  }
+  list.forEach(([u,t])=>{const s=doc.createElement('source');s.src=u;s.type=t;s.addEventListener('error',()=>{if(++bad>=list.length)fail('the video file could not be loaded')});v.appendChild(s)});
+  v.addEventListener('error',()=>fail('the video could not be played'));
+  v.addEventListener('loadeddata',()=>{loaded=true;clearTimeout(timer)});
+  const play=()=>{try{const p=v.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name==='NotAllowedError')fail('the browser blocked the video from playing')})}catch(e){}};
+  const check=()=>{if(failed||stopped)return;if(doc.hidden)v.pause();else play()};
+  function start(){
+    if(stopped)return;
+    doc.documentElement.appendChild(v);play();
+    timer=setTimeout(()=>{if(!loaded)fail('the video did not load in time')},6000);
+    if(opts.pauseWhenAway)doc.addEventListener('visibilitychange',check);
+  }
+  if(doc.documentElement)start();else doc.addEventListener('DOMContentLoaded',start,{once:true});
+  return{
+    pause(){if(!failed&&!stopped)v.pause()},resume(){if(!failed&&!stopped)play()},
+    stop(){stopped=true;clearTimeout(timer);doc.removeEventListener('visibilitychange',check);try{v.pause();v.remove()}catch(e){}},
+    info(){return{kind:'video',active:loaded&&!v.paused&&!stopped&&!failed,failed,reason:why,loaded,paused:v.paused,attached:v.isConnected,
+      video:{ready:v.readyState,network:v.networkState,time:Math.round(v.currentTime*10)/10,error:v.error?v.error.code:null,src:v.currentSrc||''}}}
+  };
+}
+
 // ---------- Settings ----------
 const THEMES=[['rainy','Rainy grey','#4f5052'],['midnight','Midnight','#272f47'],['forest','Forest','#2f3e37'],['sand','Sand','#5a4f44'],['light','Light','#ebe8e3']];
-const DEFAULTS={theme:'rainy',rain:'normal',rainForce:true,tint:true,blur:true,blobs:true,notebook:true,pause:true,rainGames:false,icon:true};
+const DEFAULTS={theme:'rainy',rain:'normal',rainStyle:'video',rainForce:true,tint:true,blur:true,blobs:true,notebook:true,pause:true,rainGames:false,icon:true};
 const RAIN_DENSITY={light:.5,normal:1,heavy:1.8};
+const RAIN_OPACITY={light:.5,normal:.8,heavy:1};   // how strong the rain video is
+const RAIN_VIDEO=[['rain.mp4','video/mp4'],['https://raw.githubusercontent.com/sigmaguessr/xs-veiny/refs/heads/main/rain.webm','video/webm']];   // the rain video files, next to this page
+let rainNote='';
 let settings={...DEFAULTS},rainCtl=null;
 (function(){   // read what was saved, ignoring anything that doesn't look right
   const v=ls.get('sx_settings');
   if(v&&typeof v==='object')for(const k in DEFAULTS)if(typeof v[k]===typeof DEFAULTS[k])settings[k]=v[k];
   if(!THEMES.some(t=>t[0]===settings.theme))settings.theme=DEFAULTS.theme;
   if(!RAIN_DENSITY[settings.rain]&&settings.rain!=='off')settings.rain=DEFAULTS.rain;
+  if(!['video','canvas'].includes(settings.rainStyle))settings.rainStyle=DEFAULTS.rainStyle;
 })();
 const rainColor=()=>getComputedStyle(document.documentElement).getPropertyValue('--rain-color').trim()||'#ffffff';
 function rainSnippet(){   // the rain, as a <script> that can be placed inside a game's page
-  return '<script>(function(){var f='+startRain.toString()+';try{f(window,2147483647,{density:'+RAIN_DENSITY[settings.rain]+',color:'+JSON.stringify(rainColor())+',force:'+!!settings.rainForce+'})}catch(e){}})()<\/script>';
+  const canvasArgs='{density:'+RAIN_DENSITY[settings.rain]+',color:'+JSON.stringify(rainColor())+',force:'+!!settings.rainForce+'}';
+  if(settings.rainStyle==='video'){
+    const sources=RAIN_VIDEO.map(([u,t])=>[new URL(u,location.href).href,t]);   // full addresses, since the game page has its own base
+    const light=settings.theme==='light',op=RAIN_OPACITY[settings.rain]*(light?.6:1);
+    return '<script>(function(){var f='+startRain.toString()+';var g='+startRainVideo.toString()+';try{g(window,2147483647,{sources:'+JSON.stringify(sources)+',opacity:'+op+',light:'+light+',force:'+!!settings.rainForce+',onFail:function(){try{f(window,2147483647,'+canvasArgs+')}catch(e){}}})}catch(e){}})()<\/script>';
+  }
+  return '<script>(function(){var f='+startRain.toString()+';try{f(window,2147483647,'+canvasArgs+')}catch(e){}})()<\/script>';
 }
 const themesEl=document.getElementById('themes');
 THEMES.forEach(([id,label,color])=>{
@@ -1138,7 +1190,15 @@ function applySettings(){
   themesEl.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.theme===settings.theme));
   document.querySelectorAll('[data-set]').forEach(el=>{const v=settings[el.dataset.set];if(el.type==='checkbox')el.checked=!!v;else el.value=v});
   if(rainCtl){rainCtl.stop();rainCtl=null}
-  if(settings.rain!=='off')rainCtl=startRain(window,30,{density:RAIN_DENSITY[settings.rain],color:rainColor(),pauseWhenAway:settings.pause,force:settings.rainForce});
+  rainNote='';
+  if(settings.rain!=='off'){
+    const drawn=()=>startRain(window,30,{density:RAIN_DENSITY[settings.rain],color:rainColor(),pauseWhenAway:settings.pause,force:settings.rainForce});
+    if(settings.rainStyle==='video'){
+      const light=settings.theme==='light';
+      rainCtl=startRainVideo(window,30,{sources:RAIN_VIDEO,opacity:RAIN_OPACITY[settings.rain]*(light?.6:1),light,pauseWhenAway:settings.pause,force:settings.rainForce,
+        onFail:reason=>{rainNote='The rain video failed ('+reason+'), so the rain is being drawn live instead.';rainCtl=drawn()}});
+    }else rainCtl=drawn();
+  }
 }
 document.querySelectorAll('[data-set]').forEach(el=>el.addEventListener('change',()=>{
   settings[el.dataset.set]=el.type==='checkbox'?el.checked:el.value;saveSettings();applySettings();
@@ -1263,9 +1323,21 @@ function diagRows(){
   const rain=[],env=[],sup=(p,v)=>{try{return !!(window.CSS&&CSS.supports(p,v))}catch(e){return false}};
   rain.push(['Rain setting',settings.rain==='off'?'Off':settings.rain,settings.rain==='off'?false:undefined]);
   rain.push(['Device asks for reduced motion',rm?'Yes'+(settings.rainForce?' (ignored, because of the setting above)':' (rain stays off unless you tick the setting above)'):'No',rm?!!settings.rainForce:true]);
+  rain.push(['Rain type',settings.rainStyle==='video'?(rainNote?'Video (failed, now drawn live)':'Video'):'Drawn live']);
+  if(rainNote)rain.push(['Note',rainNote,false]);
   if(settings.rain==='off')rain.push(['Rain','Not started',false]);
   else if(!inf)rain.push(['Rain','Not started',false]);
-  else if(inf.reason)rain.push(['Rain','Not running: '+inf.reason,false]);
+  else if(inf.reason&&inf.kind!=='video')rain.push(['Rain','Not running: '+inf.reason,false]);
+  else if(inf.kind==='video'){
+    if(inf.reason&&!inf.loaded&&!inf.attached&&!inf.failed)rain.push(['Rain','Not running: '+inf.reason,false]);
+    else{
+      rain.push(['Video playing',inf.active?'Yes':inf.paused?'Paused (this tab is hidden, or it has not started)':'No',inf.active]);
+      rain.push(['Video file loaded',inf.loaded?'Yes':'Not yet',inf.loaded]);
+      rain.push(['Video on the page',inf.attached?'Yes':'No',inf.attached]);
+      rain.push(['Video position',inf.video.time+' seconds (should keep moving)']);
+      rain.push(['Video state','ready '+inf.video.ready+' of 4, network '+inf.video.network+(inf.video.error?', error code '+inf.video.error:'')]);
+    }
+  }
   else{
     rain.push(['Rain animation',!inf.running?'Stopped':inf.paused?'Paused (this tab is hidden)':'Running',inf.active]);
     rain.push(['Canvas on the page',inf.attached?'Yes':'No',inf.attached]);
